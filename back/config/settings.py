@@ -68,6 +68,8 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
+DATABASE_URL = 'postgresql://memora_db_2ldn_user:CuhM1DAfrBSae9Ny9IzyexofCmf25CXN@dpg-d5tidnu3jp1c73e8nn9g-a/memora_db_2ldn'
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
