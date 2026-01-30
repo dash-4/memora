@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, BookOpen, TrendingUp, Clock, CheckCircle, PlayCircle, BarChart, Target } from 'lucide-react';
 import api from '../../services/api';
-import Card from '../../components/ui/Card';
+import Card from '../../components/cards/Card';
 import Button from '../../components/ui/Button';
 import Layout from '../../components/layout/Layout';
 import toast from 'react-hot-toast';
@@ -93,8 +93,10 @@ const Dashboard = () => {
     return 'bg-green-700';
   };
 
+  // ✅ ИСПРАВЛЕНО: правильный URL для навигации
   const handleStartStudying = (deckId) => {
-    navigate(`/study/${deckId}`);
+    console.log('🚀 Начинаем обучение для колоды:', deckId);
+    navigate(`/study?deck=${deckId}&mode=learning`); // ← ВОТ ЭТО ИСПРАВЛЕНИЕ!
   };
 
   const handleCalendarClick = () => {
@@ -105,7 +107,7 @@ const Dashboard = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Загрузка...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </Layout>
     );
@@ -204,10 +206,7 @@ const Dashboard = () => {
                             <Clock size={14} />
                             {deck.cards_due_today} на сегодня
                           </span>
-                          <span className="flex items-center gap-1">
-                            <CheckCircle size={14} />
-                            {deck.mastered_cards} освоено
-                          </span>
+                          
                         </div>
                       </div>
                     </div>

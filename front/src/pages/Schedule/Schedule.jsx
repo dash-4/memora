@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, TrendingUp, BookOpen, Clock, PlayCircle, CheckCircle, ArrowRight, Sparkles } from 'lucide-react';
 import api from '../../services/api';
-import Card from '../../components/ui/Card';
+import Card from '../../components/cards/Card';
 import Button from '../../components/ui/Button';
 import Layout from '../../components/layout/Layout';
 import toast from 'react-hot-toast';
@@ -54,7 +54,7 @@ const Schedule = () => {
   };
 
   const handleStartStudying = (deckId) => {
-    navigate(`/study/${deckId}`);
+    navigate(`/study?deck=${deckId}&mode=learning`);
   };
 
   const getDateLabel = (dateString) => {
@@ -143,10 +143,7 @@ const Schedule = () => {
                                 <Clock size={14} className="text-orange-600" />
                                 <span className="font-semibold text-orange-700">{deck.cards_due_today}</span> на сегодня
                               </span>
-                              <span className="flex items-center gap-1 bg-green-100 px-2 py-1 rounded-full">
-                                <CheckCircle size={14} className="text-green-600" />
-                                <span className="font-semibold text-green-700">{deck.mastered_cards}</span> освоено
-                              </span>
+                             
                             </div>
                           </div>
                         </div>

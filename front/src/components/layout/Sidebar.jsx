@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, BarChart3, HelpCircle, X } from 'lucide-react';
+import { Home, BookOpen, BarChart3, X } from 'lucide-react';
 
 const navigation = [
   { name: 'Главная', href: '/dashboard', icon: Home },

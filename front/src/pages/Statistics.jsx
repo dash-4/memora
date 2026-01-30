@@ -11,7 +11,7 @@ import {
   Clock,
 } from "lucide-react";
 import api from "../services/api";
-import Card from "../components/ui/Card";
+import Card from "../components/cards/Card";
 import Button from "../components/ui/Button";
 import Layout from "../components/layout/Layout";
 import toast from "react-hot-toast";

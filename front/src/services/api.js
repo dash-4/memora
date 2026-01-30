@@ -51,4 +51,100 @@ api.interceptors.response.use(
   }
 );
 
+// ========================================
+// 🆕 ДОПОЛНЕНИЯ: API методы
+// ========================================
+
+// 🃏 КАРТОЧКИ
+export const cardsAPI = {
+  // Получить карточки с фильтрами
+  getCards: (params = {}) => api.get('/cards/', { params }),
+  
+  // Получить одну карточку
+  getCard: (id) => api.get(`/cards/${id}/`),
+  
+  // Создать карточку с тегами
+  createCard: (data) => api.post('/cards/', data),
+  
+  // Обновить карточку
+  updateCard: (id, data) => api.patch(`/cards/${id}/`, data),
+  
+  // Удалить карточку
+  deleteCard: (id) => api.delete(`/cards/${id}/`),
+  
+  // Популярные теги пользователя
+  getPopularTags: () => api.get('/cards/popular_tags/'),
+};
+
+// 📚 КОЛОДЫ
+export const decksAPI = {
+  // Получить все колоды с фильтрами
+  getDecks: (params = {}) => api.get('/decks/', { params }),
+  
+  // Получить одну колоду
+  getDeck: (id) => api.get(`/decks/${id}/`),
+  
+  // Создать колоду
+  createDeck: (data) => api.post('/decks/', data),
+  
+  // Обновить колоду
+  updateDeck: (id, data) => api.patch(`/decks/${id}/`, data),
+  
+  // Удалить колоду
+  deleteDeck: (id) => api.delete(`/decks/${id}/`),
+  
+  // Получить карточки конкретной колоды с фильтрами
+  getDeckCards: (id, params = {}) => api.get(`/decks/${id}/cards/`, { params }),
+};
+
+// 📖 ОБУЧЕНИЕ
+export const studyAPI = {
+  // Получить карточки на повторение
+  getDueCards: (params = {}) => api.get('/study/due_cards/', { params }),
+  
+  // Получить все карточки для практики
+  getAllCards: (deckId, limit = 20) => 
+    api.get('/study/all_cards/', { params: { deck_id: deckId, limit } }),
+  
+  // Начать сессию обучения
+  startSession: (data) => api.post('/study/start_session/', data),
+  
+  // Отправить оценку карточки
+  submitReview: (data) => api.post('/study/submit_review/', data),
+  
+  // Завершить сессию
+  endSession: (sessionId) => api.post('/study/end_session/', { session_id: sessionId }),
+  
+  // Получить расписание повторений
+  getSchedule: (params = {}) => api.get('/study/schedule/', { params }),
+  
+  // Получить базовую статистику
+  getStats: () => api.get('/study/stats/'),
+};
+
+// 📊 СТАТИСТИКА
+export const statisticsAPI = {
+  // Дашборд с общей статистикой
+  getDashboard: () => api.get('/statistics/dashboard/'),
+  
+  // Прогресс по всем колодам
+  getDecksProgress: () => api.get('/statistics/decks_progress/'),
+  
+  // Детальная статистика обучения (за N дней)
+  getLearningStats: (days = 30) => 
+    api.get('/statistics/learning_stats/', { params: { days } }),
+  
+  // Статистика по тегам
+  getTagsStats: () => api.get('/statistics/tags_stats/'),
+};
+
+// 👤 ПОЛЬЗОВАТЕЛЬ (если нужно)
+export const userAPI = {
+  // Получить текущего пользователя
+  getCurrentUser: () => api.get('/accounts/me/'),
+  
+  // Обновить профиль
+  updateProfile: (data) => api.patch('/accounts/me/', data),
+};
+
 export default api;
