@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Brain, Calendar, Target, BookOpen, Zap, HelpCircle, Sparkles, ArrowLeft, Home } from 'lucide-react';
+import { 
+  ChevronDown, 
+  Brain, 
+  Calendar, 
+  Target, 
+  BookOpen, 
+  Zap, 
+  Sparkles, 
+  ArrowLeft,
+  Search
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
 
-const FAQ = () => {
+export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const toggleQuestion = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -12,7 +24,7 @@ const FAQ = () => {
   const sections = [
     {
       title: 'Основы работы',
-      icon: HelpCircle,
+      icon: BookOpen,
       color: 'blue',
       questions: [
         {
@@ -188,110 +200,145 @@ const FAQ = () => {
 
   const getColorClasses = (color) => {
     const colors = {
-      blue: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-300', hover: 'hover:border-blue-400' },
-      purple: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', hover: 'hover:border-purple-400' },
-      green: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-300', hover: 'hover:border-green-400' },
-      orange: { bg: 'bg-orange-100', text: 'text-orange-600', border: 'border-orange-300', hover: 'hover:border-orange-400' },
-      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-300', hover: 'hover:border-yellow-400' },
-      indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-300', hover: 'hover:border-indigo-400' }
+      blue: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-500', hover: 'hover:border-blue-400' },
+      purple: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-500', hover: 'hover:border-purple-400' },
+      green: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-500', hover: 'hover:border-green-400' },
+      orange: { bg: 'bg-orange-100', text: 'text-orange-600', border: 'border-orange-500', hover: 'hover:border-orange-400' },
+      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-500', hover: 'hover:border-yellow-400' },
+      indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-500', hover: 'hover:border-indigo-400' }
     };
     return colors[color] || colors.blue;
   };
 
+  const filteredSections = searchQuery.trim()
+    ? sections.map(section => ({
+        ...section,
+        questions: section.questions.filter(q =>
+          q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          q.answer.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      })).filter(section => section.questions.length > 0)
+    : sections;
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="space-y-8 max-w-4xl mx-auto">
-        <Link to="/" className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors">
-          <ArrowLeft size={20} />
-          <span>Вернуться на главную</span>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 space-y-6 sm:space-y-8">
+        <Link to="/" className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors group">
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span>На главную</span>
         </Link>
 
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 sm:space-y-6">
           <div className="flex items-center justify-center">
-            <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <Sparkles className="text-white" size={32} />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Sparkles className="text-white" size={28} />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900">Часто задаваемые вопросы</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Всё, что нужно знать об использовании Memora и научном методе интервального повторения
-          </p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+              Часто задаваемые вопросы
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+              Всё, что нужно знать об использовании Memora и научном методе интервального повторения
+            </p>
+          </div>
+
+          <div className="max-w-xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Поиск по вопросам..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 sm:py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base transition-shadow"
+              />
+            </div>
+          </div>
         </div>
 
-        {sections.map((section, sectionIndex) => {
-          const colors = getColorClasses(section.color);
-          
-          return (
-            <div key={sectionIndex} className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center shadow-sm`}>
-                  <section.icon className={colors.text} size={24} />
+        {filteredSections.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Ничего не найдено. Попробуйте другой запрос.</p>
+          </div>
+        ) : (
+          filteredSections.map((section, sectionIndex) => {
+            const colors = getColorClasses(section.color);
+            
+            return (
+              <div key={sectionIndex} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-11 h-11 sm:w-12 sm:h-12 ${colors.bg} rounded-xl flex items-center justify-center shadow-sm`}>
+                    <section.icon className={colors.text} size={22} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{section.title}</h2>
+                    <p className="text-xs sm:text-sm text-gray-500">{section.questions.length} {section.questions.length === 1 ? 'вопрос' : section.questions.length < 5 ? 'вопроса' : 'вопросов'}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{section.title}</h2>
-                  <p className="text-sm text-gray-500">{section.questions.length} вопросов</p>
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                {section.questions.map((item, questionIndex) => {
-                  const globalIndex = `${sectionIndex}-${questionIndex}`;
-                  const isOpen = openIndex === globalIndex;
+                <div className="space-y-3">
+                  {section.questions.map((item, questionIndex) => {
+                    const globalIndex = `${sectionIndex}-${questionIndex}`;
+                    const isOpen = openIndex === globalIndex;
 
-                  return (
-                    <div
-                      key={questionIndex}
-                      className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all ${
-                        isOpen 
-                          ? `${colors.border} shadow-lg` 
-                          : `border-gray-200 ${colors.hover} hover:shadow-md`
-                      }`}
-                      onClick={() => toggleQuestion(globalIndex)}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-lg font-semibold text-gray-900 flex-1">
-                          {item.question}
-                        </h3>
-                        <ChevronDown
-                          className={`shrink-0 transition-transform ${
-                            isOpen ? 'rotate-180' : ''
-                          } ${colors.text}`}
-                          size={24}
-                        />
-                      </div>
-
-                      {isOpen && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                            {item.answer}
-                          </p>
+                    return (
+                      <div
+                        key={questionIndex}
+                        className={`bg-white rounded-xl p-4 sm:p-5 md:p-6 border-2 cursor-pointer transition-all ${
+                          isOpen 
+                            ? `${colors.border} shadow-lg` 
+                            : `border-gray-200 ${colors.hover} hover:shadow-md`
+                        }`}
+                        onClick={() => toggleQuestion(globalIndex)}
+                      >
+                        <div className="flex items-start justify-between gap-3 sm:gap-4">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1">
+                            {item.question}
+                          </h3>
+                          <ChevronDown
+                            className={`shrink-0 transition-transform duration-300 ${
+                              isOpen ? 'rotate-180' : ''
+                            } ${colors.text}`}
+                            size={24}
+                          />
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
 
-        <div className="bg-blue-50 rounded-2xl p-8 border-2 border-blue-200">
+                        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {item.answer}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 sm:p-8 border-2 border-blue-200 shadow-md">
           <div className="text-center">
-            <Home className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Готовы начать?</h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <Brain className="text-white" size={24} />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Готовы начать?</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-5 sm:mb-6 max-w-md mx-auto">
               Откройте для себя эффективное обучение с Memora
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/">
-                <button className="bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-6 py-3 rounded-xl transition-colors w-full sm:w-auto">
+              <Link to="/" className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto px-6 py-3">
                   На главную
-                </button>
+                </Button>
               </Link>
-              <Link to="/register">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg w-full sm:w-auto">
+              <Link to="/register" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto px-6 py-3 shadow-lg">
                   Начать обучение
-                </button>
+                </Button>
               </Link>
             </div>
           </div>
@@ -299,6 +346,4 @@ const FAQ = () => {
       </div>
     </div>
   );
-};
-
-export default FAQ;
+}

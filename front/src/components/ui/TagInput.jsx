@@ -6,7 +6,6 @@ export const TagInput = ({ value = [], onChange, placeholder = 'Добавить
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Загрузить популярные теги
   useEffect(() => {
     const loadTags = async () => {
       try {
@@ -19,7 +18,6 @@ export const TagInput = ({ value = [], onChange, placeholder = 'Добавить
     loadTags();
   }, []);
 
-  // Добавить тег
   const addTag = (tag) => {
     const trimmed = tag.trim().toLowerCase();
     if (trimmed && !value.includes(trimmed)) {
@@ -29,12 +27,10 @@ export const TagInput = ({ value = [], onChange, placeholder = 'Добавить
     setShowSuggestions(false);
   };
 
-  // Удалить тег
   const removeTag = (tagToRemove) => {
     onChange(value.filter(tag => tag !== tagToRemove));
   };
 
-  // Обработать Enter или запятую
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
@@ -44,7 +40,6 @@ export const TagInput = ({ value = [], onChange, placeholder = 'Добавить
     }
   };
 
-  // Фильтровать подсказки
   const filteredSuggestions = suggestions.filter(
     s => s.name.toLowerCase().includes(input.toLowerCase()) && !value.includes(s.name)
   );

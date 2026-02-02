@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const CardFilters = ({ 
   filters, 
   onFilterChange, 
@@ -21,10 +19,8 @@ export const CardFilters = ({
   return (
     <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
       <div className="flex flex-wrap gap-4 items-end">
-        {/* Поиск */}
         <div className="flex-1 min-w-[240px]">
           <div className="relative">
-            {/* Иконка поиска */}
             <svg 
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" 
               width="16" 
@@ -48,7 +44,6 @@ export const CardFilters = ({
               className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
             />
             
-            {/* Кнопка очистки поиска */}
             {filters.search && (
               <button
                 type="button"
@@ -62,7 +57,6 @@ export const CardFilters = ({
           </div>
         </div>
 
-        {/* Колода (опционально) */}
         {showDeckFilter && decks.length > 0 && (
           <div className="min-w-[180px]">
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
@@ -83,7 +77,6 @@ export const CardFilters = ({
           </div>
         )}
 
-        {/* Статус */}
         <div className="min-w-[180px]">
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">
             Статус
@@ -100,7 +93,6 @@ export const CardFilters = ({
           </select>
         </div>
 
-        {/* Теги */}
         {popularTags.length > 0 && (
           <div className="min-w-[180px]">
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
@@ -121,7 +113,6 @@ export const CardFilters = ({
           </div>
         )}
 
-        {/* Кнопка сброса */}
         {hasActiveFilters && (
           <button
             onClick={resetFilters}
@@ -147,7 +138,6 @@ export const CardFilters = ({
         )}
       </div>
 
-      {/* Активные фильтры (теги) */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-gray-100">
           <span className="text-xs font-semibold text-gray-500">

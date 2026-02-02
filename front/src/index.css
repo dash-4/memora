@@ -190,3 +190,18 @@ body {
 .animate-slideOut {
   animation: slideOut 0.3s ease-out forwards;
 }
+
+@layer utilities {
+  .perspective-\[1200px\] {
+    perspective: 1200px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}

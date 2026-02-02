@@ -63,7 +63,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
     }
   };
 
-  // Закрытие по Escape
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -103,7 +102,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Вопрос */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Вопрос (Лицевая сторона) <span className="text-red-500">*</span>
@@ -121,7 +119,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Ответ */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Ответ (Обратная сторона) <span className="text-red-500">*</span>
@@ -139,7 +136,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Теги */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Теги <span className="text-gray-400 font-normal">(необязательно)</span>
@@ -155,7 +151,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Превью тегов */}
           {formData.tags.length > 0 && (
             <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
               <p className="text-xs font-semibold text-purple-700 mb-2">
@@ -174,7 +169,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Кнопки */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
             <Button
               type="button"

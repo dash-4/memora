@@ -1,11 +1,14 @@
+# backend/accounts/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AuthViewSet, UserViewSet
+from . import views
 
 router = DefaultRouter()
-router.register('', AuthViewSet, basename='auth')
-router.register('user', UserViewSet, basename='user')
+router.register(r'', views.AuthViewSet, basename='auth')
 
 urlpatterns = [
+    path('user/', include([
+        path('me/', views.UserViewSet.as_view({'get': 'me'}), name='user-me'),
+    ])),
     path('', include(router.urls)),
 ]

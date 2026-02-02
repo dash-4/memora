@@ -1,5 +1,3 @@
-// src/components/ui/Input.jsx
-
 const Input = ({ label, error, className = '', ...props }) => {
   return (
     <div className="w-full">

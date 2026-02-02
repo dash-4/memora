@@ -5,9 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q, Count, Avg
-from datetime import timedelta, datetime
+from datetime import date, timedelta, datetime
 from calendar import monthrange
 from taggit.models import Tag
+from collections import defaultdict
 
 from .models import Deck, Card, StudySession, CardReview, Folder
 from .serializers import (
@@ -43,8 +44,8 @@ class DeckViewSet(viewsets.ModelViewSet):
     def cards(self, request, pk=None):
         deck = self.get_object()
         cards = self._apply_card_filters(deck.cards.all())
-        
         serializer = CardSerializer(cards, many=True)
+        
         return Response({
             'deck': DeckSerializer(deck).data,
             'cards': serializer.data,
@@ -290,92 +291,107 @@ class StudyViewSet(viewsets.GenericViewSet):
     
     @action(detail=False, methods=['get'])
     def schedule(self, request):
+        days = int(request.query_params.get('days', 7))
         year = request.query_params.get('year')
         month = request.query_params.get('month')
-        days = int(request.query_params.get('days', 7))
         user = request.user
+        today = timezone.now().date()
         
         if year and month:
-            schedule = self._build_month_schedule(int(year), int(month), user)
+            try:
+                year, month = int(year), int(month)
+                _, days_in_month = monthrange(year, month)
+                start_date = date(year, month, 1)
+                end_date = date(year, month, days_in_month)
+            except (ValueError, TypeError):
+                return Response({'error': 'Неверный год или месяц'}, status=400)
         else:
-            schedule = self._build_days_schedule(days, user)
+            start_date = today
+            end_date = today + timedelta(days=days - 1)
         
-        today = timezone.now().date()
-        stats = self._get_schedule_stats(user, today)
+        schedule_by_date = defaultdict(lambda: {'count': 0, 'by_deck': defaultdict(int)})
         
-        return Response({'schedule': schedule, 'stats': stats})
-    
-    def _build_month_schedule(self, year, month, user):
-        _, days_in_month = monthrange(year, month)
-        schedule = []
-        
-        for day in range(1, days_in_month + 1):
-            target_date = datetime(year, month, day).date()
-            schedule.append(self._get_day_schedule(target_date, user))
-        
-        return schedule
-    
-    def _build_days_schedule(self, days, user):
-        today = timezone.now().date()
-        schedule = []
-        
-        for i in range(days):
-            target_date = today + timedelta(days=i)
-            schedule.append(self._get_day_schedule(target_date, user))
-        
-        return schedule
-    
-    def _get_day_schedule(self, target_date, user):
-        cards = Card.objects.filter(
+        overdue_cards = Card.objects.filter(
             deck__user=user,
             is_suspended=False,
-            next_review__date=target_date
+            next_review__lt=start_date
         ).select_related('deck')
         
-        decks_dict = {}
-        for card in cards:
+        for card in overdue_cards:
+            date_str = start_date.isoformat()
             deck_id = card.deck.id
-            if deck_id not in decks_dict:
-                decks_dict[deck_id] = {
-                    'deck_id': deck_id,
-                    'deck_name': card.deck.name,
-                    'color': card.deck.color,
-                    'count': 0
-                }
-            decks_dict[deck_id]['count'] += 1
+            schedule_by_date[date_str]['count'] += 1
+            schedule_by_date[date_str]['by_deck'][deck_id] += 1
         
-        return {
-            'date': target_date.isoformat(),
-            'count': cards.count(),
-            'by_deck': list(decks_dict.values())
-        }
-    
-    def _get_schedule_stats(self, user, today):
-        return {
+        cards_due = Card.objects.filter(
+            deck__user=user,
+            is_suspended=False,
+            next_review__date__range=[start_date, end_date]
+        ).select_related('deck').order_by('next_review')
+        
+        for card in cards_due:
+            due_date = card.next_review.date().isoformat()
+            deck_id = card.deck.id
+            schedule_by_date[due_date]['count'] += 1
+            schedule_by_date[due_date]['by_deck'][deck_id] += 1
+        
+        schedule = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.isoformat()
+            day_data = schedule_by_date.get(date_str, {'count': 0, 'by_deck': {}})
+            
+            by_deck_list = []
+            for deck_id, cnt in day_data['by_deck'].items():
+                try:
+                    deck = Deck.objects.get(id=deck_id)
+                    by_deck_list.append({
+                        'deck_id': deck_id,
+                        'deck_name': deck.name,
+                        'color': deck.color or '#6366f1',
+                        'count': cnt
+                    })
+                except Deck.DoesNotExist:
+                    continue
+            
+            schedule.append({
+                'date': date_str,
+                'count': day_data['count'],
+                'by_deck': by_deck_list
+            })
+            
+            current_date += timedelta(days=1)
+        
+        stats = {
             'today': Card.objects.filter(
                 deck__user=user,
                 is_suspended=False,
-                next_review__date=today
+                next_review__lte=timezone.now()
             ).count(),
             'week': Card.objects.filter(
                 deck__user=user,
                 is_suspended=False,
-                next_review__date__range=[today, today + timedelta(days=7)]
+                next_review__date__range=[today, today + timedelta(days=6)]
             ).count(),
-            'completed': Card.objects.filter(deck__user=user, repetitions__gte=3).count(),
-            'total': Card.objects.filter(deck__user=user).count()
+            'total_due': Card.objects.filter(
+                deck__user=user,
+                is_suspended=False,
+                next_review__lte=timezone.now()
+            ).count(),
         }
+        
+        return Response({'schedule': schedule, 'stats': stats})
     
     @action(detail=False, methods=['get'])
     def stats(self, request):
         user = request.user
-        today = timezone.now().date()
+        now = timezone.now()
         
         return Response({
             'cards_due_today': Card.objects.filter(
                 deck__user=user,
                 is_suspended=False,
-                next_review__date__lte=today
+                next_review__lte=now
             ).count(),
             'total_decks': Deck.objects.filter(user=user).count(),
             'total_cards': Card.objects.filter(deck__user=user).count(),
@@ -392,6 +408,7 @@ class StatisticsViewSet(viewsets.GenericViewSet):
         profile = user.profile
         today = timezone.now().date()
         week_ago = today - timedelta(days=7)
+        now = timezone.now()
         
         return Response({
             'cards': {
@@ -399,7 +416,7 @@ class StatisticsViewSet(viewsets.GenericViewSet):
                 'due_today': Card.objects.filter(
                     deck__user=user,
                     is_suspended=False,
-                    next_review__lte=timezone.now()
+                    next_review__lte=now
                 ).count()
             },
             'decks': {
@@ -489,6 +506,7 @@ class StatisticsViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['get'])
     def decks_progress(self, request):
         user = request.user
+        now = timezone.now()
         decks = Deck.objects.filter(user=user).prefetch_related('cards')
         
         decks_data = []
@@ -497,49 +515,45 @@ class StatisticsViewSet(viewsets.GenericViewSet):
             total_cards = cards.count()
             
             if total_cards > 0:
-                stats = self._calculate_deck_stats(cards, total_cards)
+                mastered = cards.filter(
+                    Q(interval__gte=10, repetitions__gte=1) | Q(repetitions__gte=3)
+                ).count()
+                learning = cards.filter(repetitions__gte=1).exclude(
+                    Q(interval__gte=10, repetitions__gte=1) | Q(repetitions__gte=3)
+                ).count()
+                
+                decks_data.append({
+                    'id': deck.id,
+                    'name': deck.name,
+                    'description': deck.description,
+                    'color': deck.color,
+                    'total_cards': total_cards,
+                    'new_cards': cards.filter(repetitions=0).count(),
+                    'learning_cards': learning,
+                    'mastered_cards': mastered,
+                    'cards_due_today': cards.filter(
+                        next_review__lte=now,
+                        is_suspended=False
+                    ).count(),
+                    'mastery_percent': round((mastered / total_cards) * 100),
+                    'created_at': deck.created_at
+                })
             else:
-                stats = self._empty_deck_stats()
-            
-            decks_data.append({
-                'id': deck.id,
-                'name': deck.name,
-                'description': deck.description,
-                'color': deck.color,
-                'total_cards': total_cards,
-                'created_at': deck.created_at,
-                **stats
-            })
+                decks_data.append({
+                    'id': deck.id,
+                    'name': deck.name,
+                    'description': deck.description,
+                    'color': deck.color,
+                    'total_cards': 0,
+                    'new_cards': 0,
+                    'learning_cards': 0,
+                    'mastered_cards': 0,
+                    'cards_due_today': 0,
+                    'mastery_percent': 0,
+                    'created_at': deck.created_at
+                })
         
         return Response(decks_data)
-    
-    def _calculate_deck_stats(self, cards, total_cards):
-        mastered_cards = cards.filter(
-            Q(interval__gte=10, repetitions__gte=1) | Q(repetitions__gte=3)
-        ).count()
-        
-        learning_cards = cards.filter(repetitions__gte=1).exclude(
-            Q(interval__gte=10, repetitions__gte=1) | Q(repetitions__gte=3)
-        ).count()
-        
-        return {
-            'new_cards': cards.filter(repetitions=0).count(),
-            'learning_cards': learning_cards,
-            'mastered_cards': mastered_cards,
-            'cards_due_today': cards.filter(
-                next_review__lte=timezone.now(), is_suspended=False
-            ).count(),
-            'mastery_percent': round((mastered_cards / total_cards) * 100)
-        }
-    
-    def _empty_deck_stats(self):
-        return {
-            'new_cards': 0,
-            'learning_cards': 0,
-            'mastered_cards': 0,
-            'cards_due_today': 0,
-            'mastery_percent': 0
-        }
 
 
 class FolderViewSet(viewsets.ModelViewSet):
