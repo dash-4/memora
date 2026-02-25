@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Calendar as CalendarIcon, 
@@ -17,8 +17,9 @@ import Card from '@/components/cards/Card';
 import Button from '@/components/ui/Button';
 import Layout from '@/components/layout/Layout';
 import Calendar from '@/components/schedule/Calendar';
+import StudyPet from '@/components/pet/StudyPet';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import toast from 'react-hot-toast';
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -29,11 +30,7 @@ export default function Dashboard() {
   const [currentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [currentMonth]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [statsResponse, scheduleResponse, decksResponse] = await Promise.all([
         api.get('/study/stats/'),
@@ -41,7 +38,6 @@ export default function Dashboard() {
           params: {
             year: currentMonth.getFullYear(),
             month: currentMonth.getMonth() + 1,
-            days: 31
           }
         }),
         api.get('/statistics/decks_progress/')
@@ -51,20 +47,19 @@ export default function Dashboard() {
       setScheduleData(scheduleResponse.data.schedule || []);
       setDecksWithDueCards(decksResponse.data.filter(deck => deck.cards_due_today > 0));
     } catch (error) {
-      console.error('Ошибка загрузки дашборда:', error);
-      toast.error('Не удалось загрузить данные');
+      toast.error('Не удалось загрузить данные дашборда');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentMonth]);
 
-  const handleStartStudying = (deckId) => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const handleStartStudying = useCallback((deckId) => {
     navigate(`/study?deck=${deckId}&mode=learning`);
-  };
-
-  const handleCalendarClick = () => {
-    navigate('/schedule');
-  };
+  }, [navigate]);
 
   const getUpcomingDays = () => {
     const today = new Date();
@@ -79,8 +74,8 @@ export default function Dashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <DashboardSkeleton />
         </div>
       </Layout>
     );
@@ -121,75 +116,84 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="space-y-6 sm:space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
+        {/* StudyPet как верхний геймификационный блок */}
+        <StudyPet />
+
+        {/* Шапка дашборда + краткое приветствие */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Главная</h1>
-          <p className="text-gray-600 mt-2">Добро пожаловать в Memora</p>
+          <h1 className="heading-page">Главная</h1>
+          <p className="text-muted mt-2">Добро пожаловать в Memora</p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Верхняя статистика по картам/колодам */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {statsCards.map((stat) => (
-            <Card key={stat.label} className="hover:shadow-lg transition-all">
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.bgColor} rounded-xl flex items-center justify-center shrink-0`}>
-                  <stat.icon size={20} className={`${stat.textColor} sm:w-6 sm:h-6`} />
+            <Card key={stat.label} className="flex flex-col hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between gap-3">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.bgColor} rounded-xl flex items-center justify-center`}>
+                  <stat.icon size={20} className={stat.textColor} />
                 </div>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500">{stat.label}</p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                 </div>
               </div>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        {/* Основной блок: слева колоды на сегодня, справа календарь обучения */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             {decksWithDueCards.length > 0 ? (
               <Card className="border-l-4 border-blue-500 bg-blue-50/60 shadow-md">
-                <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5">
+                <div className="p-6 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                       <Clock className="text-white" size={20} />
                     </div>
-                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                      Готовы повторить сегодня?
-                    </h2>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Готовы повторить сегодня?</h2>
+                      <p className="text-sm text-gray-700">
+                        На сегодня{' '}
+                        <span className="font-bold text-blue-700">
+                          {stats?.cards_due_today || 0}
+                        </span>{' '}
+                        карточек
+                      </p>
+                    </div>
                   </div>
-
-                  <p className="text-sm sm:text-base text-gray-700">
-                    На сегодня <span className="font-bold text-blue-700">{stats?.cards_due_today || 0}</span> карточек
-                  </p>
 
                   <div className="space-y-3">
                     {decksWithDueCards.map((deck) => (
                       <div
                         key={deck.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow transition-all"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow transition-all"
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div
-                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: deck.color + '30' || '#6366f130' }}
+                            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: (deck.color || '#3B82F6') + '20' }}
                           >
-                            <BookOpen size={18} style={{ color: deck.color || '#6366f1' }} className="sm:w-5 sm:h-5" />
+                            <BookOpen size={18} style={{ color: deck.color || '#3B82F6' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base lg:text-lg">
+                            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                               {deck.name}
                             </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                              {deck.cards_due_today} карточек
+                            <p className="text-xs sm:text-sm text-gray-600">
+                              {deck.cards_due_today} на сегодня
                             </p>
                           </div>
                         </div>
 
                         <Button
-                          onClick={() => handleStartStudying(deck.id)}
-                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
                           size="sm"
+                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleStartStudying(deck.id)}
                         >
-                          <PlayCircle size={16} className="mr-2 sm:w-4 sm:h-4" />
+                          <PlayCircle size={16} className="mr-1" />
                           Начать
                         </Button>
                       </div>
@@ -199,87 +203,68 @@ export default function Dashboard() {
               </Card>
             ) : (
               <Card className="border-2 border-dashed border-gray-300 bg-gray-50/80">
-                <div className="text-center py-8 sm:py-10 px-4 sm:px-6">
-                  <Target className="w-12 h-12 sm:w-14 sm:h-14 mx-auto text-gray-400 mb-3 sm:mb-4" />
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                    Всё спокойно
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+                <div className="text-center py-10 px-6">
+                  <Target className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Всё спокойно</h3>
+                  <p className="text-sm text-gray-600 max-w-md mx-auto">
                     На сегодня нет карточек для повторения. Отличная работа!
                   </p>
                 </div>
               </Card>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {/* Быстрая навигация по разделам */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <Link to="/decks">
-                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer border-2 border-gray-200 hover:border-blue-300">
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 py-4 sm:py-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <BookOpen size={20} className="text-blue-600 sm:w-6 sm:h-6" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900">Мои колоды</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">Управляйте колодами</p>
+                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                    <BookOpen size={20} className="text-blue-600" />
                   </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">Мои колоды</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Управляйте колодами и карточками</p>
                 </Card>
               </Link>
 
               <Link to="/statistics">
-                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer border-2 border-gray-200 hover:border-green-300">
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 py-4 sm:py-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <BarChart size={20} className="text-green-600 sm:w-6 sm:h-6" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900">Статистика</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">Ваш прогресс</p>
+                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                    <BarChart size={20} className="text-green-600" />
                   </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">Статистика</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Глубокий анализ прогресса</p>
                 </Card>
               </Link>
 
               <Link to="/schedule">
-                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer border-2 border-gray-200 hover:border-purple-300">
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 py-4 sm:py-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <CalendarIcon size={20} className="text-purple-600 sm:w-6 sm:h-6" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900">Расписание</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">План повторений</p>
+                <Card className="hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+                    <CalendarIcon size={20} className="text-purple-600" />
                   </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">Расписание</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">План повторений по дням</p>
                 </Card>
               </Link>
             </div>
           </div>
 
-          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          {/* Календарь обучения + ближайшие дни */}
+          <div className="space-y-6">
             <Card className="shadow-md">
               <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between mb-10 ">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                     <CalendarIcon className="text-blue-600" size={20} />
-                    Расписание
+                    Календарь обучения
                   </h2>
-                  <button
-                    onClick={handleCalendarClick}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                  >
-                    Открыть
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
-
-                <div className="scale-90 sm:scale-95 origin-top -mx-2 sm:-mx-1">
-                  <Calendar
-                    data={scheduleData}
-                    onDayClick={handleCalendarClick}
-                  />
-                </div>
+                <Calendar data={scheduleData} onDayClick={() => navigate('/schedule')} />
               </div>
             </Card>
 
             {upcomingDays.length > 0 && (
               <Card className="shadow-md">
                 <div className="p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
                     <Flame className="text-orange-500" size={20} />
                     <h3 className="text-base sm:text-lg font-bold text-gray-900">
                       Ближайшие дни
@@ -291,12 +276,12 @@ export default function Dashboard() {
                       const dayDate = new Date(day.date);
                       const isToday = dayDate.toDateString() === new Date().toDateString();
                       const isTomorrow = dayDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                      
+
                       let label = dayDate.toLocaleDateString('ru-RU', { 
                         day: 'numeric', 
                         month: 'short' 
                       });
-                      
+
                       if (isToday) label = 'Сегодня';
                       if (isTomorrow) label = 'Завтра';
 
@@ -322,14 +307,6 @@ export default function Dashboard() {
                       );
                     })}
                   </div>
-
-                  <button
-                    onClick={handleCalendarClick}
-                    className="w-full mt-10 text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-1 py-2"
-                  >
-                    Смотреть всё расписание
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
               </Card>
             )}

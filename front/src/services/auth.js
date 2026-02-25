@@ -41,7 +41,6 @@ export const authService = {
         await api.post('/auth/logout/', { refresh: refreshToken });
       }
     } catch (error) {
-      console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -56,7 +55,6 @@ export const authService = {
       localStorage.setItem('user', JSON.stringify(response.data));
       return response.data;
     } catch (error) {
-      console.error('Get current user error:', error);
       this.logout();
       throw error;
     }

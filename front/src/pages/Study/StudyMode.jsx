@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
 import LearningSession from '@/components/study/LearningSession';
-import PracticeSession from '@/components/study/PracticeSession'; 
+import PracticeSession from '@/components/study/PracticeSession';
+import MatchingSession from '@/components/study/MatchingSession';
+import TestSession from '@/components/study/TestSession';
 import Layout from '@/components/layout/Layout';
-import { AlertCircle, BookOpen } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 export default function StudyMode() {
@@ -41,6 +43,22 @@ export default function StudyMode() {
     return (
       <Layout>
         <PracticeSession deckId={deckId} />
+      </Layout>
+    );
+  }
+
+  if (mode === 'matching') {
+    return (
+      <Layout>
+        <MatchingSession deckId={deckId} />
+      </Layout>
+    );
+  }
+
+  if (mode === 'test') {
+    return (
+      <Layout>
+        <TestSession deckId={deckId} />
       </Layout>
     );
   }

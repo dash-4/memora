@@ -168,7 +168,7 @@ export default function Landing() {
               <ArrowRight size={16} />
             </Link>
 
-            <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto pt-6 sm:pt-8 border-t border-gray-300 px-4">
+            {/* <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto pt-6 sm:pt-8 border-t border-gray-300 px-4">
               <div>
                 <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mb-2">10x</div>
                 <div className="text-xs sm:text-sm md:text-base text-gray-600">Эффективнее</div>
@@ -181,7 +181,7 @@ export default function Landing() {
                 <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mb-2">0₽</div>
                 <div className="text-xs sm:text-sm md:text-base text-gray-600">Бесплатно</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -198,13 +198,15 @@ export default function Landing() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {features.map((feature, index) => (
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
               <div
                 key={index}
-                className="p-5 sm:p-6 md:p-8 rounded-2xl bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300"
+                className="p-5 sm:p-6 md:p-8 rounded-2xl bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-soft-lg transition-all duration-300"
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 sm:mb-5">
-                  <feature.icon className="text-blue-600" size={24} />
+                  <Icon className="text-blue-600" size={24} />
                 </div>
                 <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">
                   {feature.title}
@@ -213,7 +215,8 @@ export default function Landing() {
                   {feature.description}
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

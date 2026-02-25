@@ -1,17 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../ui/Button';
 import { TagInput } from '../ui/TagInput';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { Upload, X } from 'lucide-react';
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ACCEPT_IMAGE = 'image/jpeg,image/png,image/gif,image/webp';
 
 const CardModal = ({ deckId, card, onClose, onSuccess }) => {
   const isEditing = !!card;
-  
+  const fileInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     front: '',
     back: '',
     tags: [],
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [clearImage, setClearImage] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -21,12 +29,40 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
         back: card.back,
         tags: card.tags || [],
       });
+      if (card.image_url) {
+        setImagePreview(card.image_url);
+      }
     }
   }, [card]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Выберите изображение (JPEG, PNG, GIF, WebP)');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error('Размер файла не более 5 МБ');
+      return;
+    }
+    setImageFile(file);
+    setClearImage(false);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setClearImage(true);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.front.trim() || !formData.back.trim()) {
       toast.error('Заполните все обязательные поля');
       return;
@@ -35,28 +71,39 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      const payload = {
-        front: formData.front.trim(),
-        back: formData.back.trim(),
-        tags: formData.tags,
-      };
-
-      if (isEditing) {
-        await api.patch(`/cards/${card.id}/`, payload);
-        toast.success('Карточка обновлена! ✅');
+      const useFormData = imageFile || (isEditing && clearImage);
+      if (useFormData) {
+        const data = new FormData();
+        data.append('front', formData.front.trim());
+        data.append('back', formData.back.trim());
+        data.append('tags', JSON.stringify(formData.tags));
+        if (isEditing) {
+          data.append('clear_image', clearImage ? 'true' : 'false');
+          if (imageFile) data.append('image', imageFile);
+          await api.patch(`/cards/${card.id}/`, data);
+        } else {
+          data.append('deck', deckId);
+          if (imageFile) data.append('image', imageFile);
+          await api.post('/cards/', data);
+        }
       } else {
-        await api.post('/cards/', {
-          ...payload,
-          deck: deckId,
-        });
-        toast.success('Карточка создана! 🎉');
+        const payload = {
+          front: formData.front.trim(),
+          back: formData.back.trim(),
+          tags: formData.tags,
+        };
+        if (isEditing) {
+          await api.patch(`/cards/${card.id}/`, payload);
+        } else {
+          await api.post('/cards/', { ...payload, deck: deckId });
+        }
       }
+      toast.success(isEditing ? 'Карточка обновлена! ✅' : 'Карточка создана! 🎉');
       onSuccess();
     } catch (error) {
-      console.error('Error saving card:', error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message ||
-                          (isEditing ? 'Ошибка обновления карточки' : 'Ошибка создания карточки');
+      const errorMessage = error.response?.data?.detail
+        || error.response?.data?.message
+        || (isEditing ? 'Ошибка обновления карточки' : 'Ошибка создания карточки');
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -133,6 +180,48 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
             />
             <p className="text-xs text-gray-500 mt-1">
               Правильный ответ или определение
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Изображение <span className="text-gray-400 font-normal">(необязательно)</span>
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT_IMAGE}
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            {imagePreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Превью"
+                  className="max-h-40 rounded-lg border border-gray-200 object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow"
+                  aria-label="Удалить изображение"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition"
+              >
+                <Upload size={20} />
+                <span className="text-sm font-medium">Загрузить изображение</span>
+              </button>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              JPEG, PNG, GIF или WebP, до 5 МБ. Показывается на карточке при обучении.
             </p>
           </div>
 

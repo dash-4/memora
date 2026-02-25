@@ -40,7 +40,6 @@ export default function Schedule() {
       setStats(scheduleResponse.data.stats);
       setDecksWithDueCards(decksResponse.data.filter(deck => deck.cards_due_today > 0));
     } catch (error) {
-      console.error('Error fetching schedule:', error);
       toast.error('Ошибка загрузки расписания');
     } finally {
       setLoading(false);
@@ -88,10 +87,10 @@ export default function Schedule() {
             <Sparkles className="text-blue-600" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="heading-page">
               Расписание
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-0.5">
+            <p className="text-muted text-sm sm:text-base mt-0.5">
               Карточки на ближайшие 7 дней
             </p>
           </div>

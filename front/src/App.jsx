@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { authService } from './services/auth';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import Landing from './pages/Landing';
 import FAQ from './pages/FAQ';
@@ -25,7 +26,8 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
-      <Routes>
+      <ErrorBoundary>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/faq" element={<FAQ />} />
@@ -105,7 +107,8 @@ function App() {
         />
 
         <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+        </Routes>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

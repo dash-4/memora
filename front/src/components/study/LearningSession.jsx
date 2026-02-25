@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import FlashCard from './FlashCard';
 import RatingButtons from './RatingButtons';
@@ -9,6 +9,8 @@ import api from '@/services/api';
 
 export default function LearningSession({ deckId }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reverse = searchParams.get('reverse') === '1';
 
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -35,6 +37,7 @@ export default function LearningSession({ deckId }) {
         const sessionRes = await api.post('/study/start_session/', {
           deck_id: Number(deckId),
           mode: 'learning',
+          reverse,
         });
 
         const newSessionId = sessionRes.data.session_id;
@@ -50,9 +53,7 @@ export default function LearningSession({ deckId }) {
             },
           });
           loadedCards = dueCardsRes.data.cards || [];
-        } catch {
-          console.warn('⚠️ due_cards не вернул карточки');
-        }
+        } catch (_e) {}
 
         if (loadedCards.length === 0) {
           const allCardsRes = await api.get(`/decks/${deckId}/cards/`);
@@ -76,7 +77,6 @@ export default function LearningSession({ deckId }) {
         setCards(shuffled);
         startTime.current = Date.now();
       } catch (err) {
-        console.error('❌ Ошибка загрузки сессии:', err);
         setError(err.response?.data?.error || 'Не удалось загрузить карточки');
         toast.error('Ошибка загрузки сессии');
       } finally {
@@ -138,14 +138,11 @@ export default function LearningSession({ deckId }) {
 
           try {
             await api.post('/study/end_session/', { session_id: sessionId });
-          } catch (endErr) {
-            console.warn('⚠️ Не удалось завершить сессию:', endErr);
-          }
+          } catch (_endErr) {}
 
           navigate(`/decks/${deckId}`);
         }
       } catch (err) {
-        console.error('❌ Ошибка submit_review:', err);
         toast.error(
           err.response?.data?.error || 'Не удалось сохранить оценку'
         );
@@ -155,6 +152,19 @@ export default function LearningSession({ deckId }) {
     },
     [cards, currentIndex, sessionId, deckId, navigate, isSubmitting]
   );
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!isFlipped || isSubmitting) return;
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= 4) {
+        e.preventDefault();
+        handleRate(n);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isFlipped, isSubmitting, handleRate]);
 
   if (loading) {
     return (
@@ -211,7 +221,7 @@ export default function LearningSession({ deckId }) {
         <ProgressBar current={currentIndex + 1} total={cards.length} />
       </div>
 
-      <FlashCard card={currentCard} isFlipped={isFlipped} onFlip={handleFlip} />
+      <FlashCard card={currentCard} isFlipped={isFlipped} onFlip={handleFlip} reverse={reverse} />
 
       {isFlipped && <RatingButtons onRate={handleRate} disabled={isSubmitting} />}
     </div>

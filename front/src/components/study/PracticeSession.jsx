@@ -1,6 +1,5 @@
-// src/components/study/PracticeSession.jsx
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import FlashCard from './FlashCard';
 import ProgressBar from './ProgressBar';
@@ -9,6 +8,8 @@ import api from '@/services/api';
 
 export default function PracticeSession({ deckId }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reverse = searchParams.get('reverse') === '1';
 
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -38,7 +39,6 @@ export default function PracticeSession({ deckId }) {
 
         setCards(loaded);
       } catch (err) {
-        console.error('Ошибка загрузки карточек:', err);
         setError('Не удалось загрузить карточки');
         toast.error('Ошибка загрузки');
       } finally {
@@ -59,9 +59,6 @@ export default function PracticeSession({ deckId }) {
       setIsFlipped(false);
     } else {
       // Просто завершаем тренировку без результатов
-      const timeSpent = Math.round((Date.now() - startTime.current) / 1000);
-      console.log(`Тренировка завершена. Просмотрено: ${currentIndex + 1} карточек за ${timeSpent} сек`);
-
       toast.success('Тренировка завершена!', {
         icon: '🏁',
         duration: 3000,
@@ -129,6 +126,7 @@ export default function PracticeSession({ deckId }) {
         card={currentCard}
         isFlipped={isFlipped}
         onFlip={handleFlip}
+        reverse={reverse}
       />
 
       {/* Навигация по карточкам */}

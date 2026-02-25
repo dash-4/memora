@@ -1,4 +1,4 @@
-import { Plus, Folder } from 'lucide-react';
+import { Plus, Folder, Trash2 } from 'lucide-react';
 import FolderTree from './FolderTree';
 
 export default function FolderSidebar({
@@ -8,6 +8,7 @@ export default function FolderSidebar({
   onCreateFolder,
   expandedFolders,
   onToggleExpand,
+  onDeleteFolder,
 }) {
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-full overflow-y-auto flex-shrink-0">
@@ -51,6 +52,7 @@ export default function FolderSidebar({
                 onSelect={onFolderSelect}
                 expandedFolders={expandedFolders}
                 onToggleExpand={onToggleExpand}
+                onDeleteFolder={onDeleteFolder}
               />
             ))}
           </div>

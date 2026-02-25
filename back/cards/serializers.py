@@ -1,18 +1,25 @@
+import json
 from rest_framework import serializers
 from .models import Deck, Card, StudySession, CardReview, Folder
 from taggit.serializers import TagListSerializerField, TaggitSerializer
 
 
-class CardSerializer(TaggitSerializer, serializers.ModelSerializer):  # ← Добавь TaggitSerializer!
+class CardSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField(required=False)
-    
+    image_url = serializers.SerializerMethodField()
+    clear_image = serializers.BooleanField(write_only=True, required=False, default=False)
+
     class Meta:
         model = Card
         fields = [
-            'id', 
-            'deck', 
-            'front', 
+            'id',
+            'deck',
+            'front',
             'back',
+            'image',
+            'image_url',
+            'clear_image',
+            'card_type',
             'repetitions',
             'ease_factor',
             'interval',
@@ -20,10 +27,37 @@ class CardSerializer(TaggitSerializer, serializers.ModelSerializer):  # ← До
             'last_reviewed',
             'is_suspended',
             'created_at',
-            'updated_at',  # ← ЗАПЯТАЯ ЗДЕСЬ!
-            'tags' 
+            'updated_at',
+            'tags',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def update(self, instance, validated_data):
+        clear = validated_data.pop('clear_image', False)
+        if clear in (True, 'true', '1') and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+        return super().update(instance, validated_data)
+
+    def to_internal_value(self, data):
+        """Поддержка multipart: tags как JSON-строка или через запятую."""
+        if hasattr(data, 'get'):
+            tags = data.get('tags')
+            if isinstance(tags, str):
+                data = data.copy() if hasattr(data, 'copy') else dict(data)
+                try:
+                    data['tags'] = json.loads(tags) if tags.strip() else []
+                except (ValueError, TypeError):
+                    data['tags'] = [t.strip() for t in tags.split(',') if t.strip()]
+        return super().to_internal_value(data)
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 from rest_framework import serializers
 from .models import Folder, Deck, Card
@@ -123,6 +157,7 @@ class StudySessionSerializer(serializers.ModelSerializer):
             'cards_studied',
             'cards_correct',
             'points_earned',
-            'is_practice_mode'
+            'is_practice_mode',
+            'is_reversed',
         ]
         read_only_fields = ['id', 'user', 'started_at']

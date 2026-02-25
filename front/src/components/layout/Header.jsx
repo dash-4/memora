@@ -10,7 +10,6 @@ export default function Header({ onMenuClick }) {
       await authService.logout(); 
       navigate('/login', { replace: true });
     } catch (err) {
-      console.error('Ошибка выхода:', err);
     }
   };
 

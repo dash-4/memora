@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react';
+import { ChevronDown, ChevronRight, Folder, FolderOpen, Trash2 } from 'lucide-react';
 
 export default function FolderTree({
   folder,
@@ -7,6 +7,7 @@ export default function FolderTree({
   onSelect,
   expandedFolders,
   onToggleExpand,
+  onDeleteFolder,
 }) {
   const isExpanded = expandedFolders.has(folder.id);
   const hasChildren = folder.subfolders?.length > 0;
@@ -46,10 +47,21 @@ export default function FolderTree({
         <span className="flex-1 font-medium text-sm truncate">{folder.name}</span>
 
         {folder.decks_count > 0 && (
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded mr-1">
             {folder.decks_count}
           </span>
         )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onDeleteFolder) onDeleteFolder(folder.id);
+          }}
+          className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+          title="Удалить папку"
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
       </div>
 
       {isExpanded && hasChildren && (
@@ -63,6 +75,7 @@ export default function FolderTree({
               onSelect={onSelect}
               expandedFolders={expandedFolders}
               onToggleExpand={onToggleExpand}
+              onDeleteFolder={onDeleteFolder}
             />
           ))}
         </div>

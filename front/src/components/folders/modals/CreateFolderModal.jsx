@@ -29,7 +29,6 @@ export default function CreateFolderModal({ parentId, onClose, onSuccess }) {
       toast.success('Папка создана! 📁');
       onSuccess();
     } catch (err) {
-      console.error(err);
       toast.error('Ошибка создания папки');
     } finally {
       setLoading(false);

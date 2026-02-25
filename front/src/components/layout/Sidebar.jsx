@@ -16,25 +16,25 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0 overflow-y-auto">
-        <div className="p-4 space-y-1">
-         
-
-          <nav className="space-y-1">
+      <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0 overflow-y-auto shadow-soft">
+        <div className="p-4 sm:p-5 space-y-1">
+          <nav className="space-y-1" aria-label="Основная навигация">
             {navigation.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.name}
                   to={item.href}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
-                    ${isActive(item.href)
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}
+                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                    ${active
+                      ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-inner-soft'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent'}
+                    focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none
                   `}
                 >
-                  <Icon size={20} className={isActive(item.href) ? 'text-blue-600' : ''} />
+                  <Icon size={20} className={active ? 'text-blue-600' : 'text-gray-500'} />
                   {item.name}
                 </Link>
               );
@@ -65,22 +65,22 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1" aria-label="Основная навигация">
           {navigation.map((item) => {
             const Icon = item.icon;
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.name}
                 to={item.href}
                 onClick={onClose}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors
-                  ${isActive(item.href)
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all
+                  ${active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}
+                  focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none
                 `}
               >
-                <Icon size={22} className={isActive(item.href) ? 'text-blue-600' : ''} />
+                <Icon size={22} className={active ? 'text-blue-600' : 'text-gray-500'} />
                 {item.name}
               </Link>
             );

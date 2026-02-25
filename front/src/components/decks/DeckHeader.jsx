@@ -15,9 +15,9 @@ export default function DeckHeader({ deck, onDelete }) {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{deck?.name}</h1>
+          <h1 className="heading-page">{deck?.name}</h1>
           {deck?.description && (
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">{deck.description}</p>
+            <p className="text-muted mt-1 text-sm sm:text-base">{deck.description}</p>
           )}
         </div>
       </div>

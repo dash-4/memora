@@ -7,8 +7,12 @@ export default function FlashCard({
   onFlip,
   className = '',
   disabled = false,
+  reverse = false,
 }) {
   const [flipped, setFlipped] = useState(isFlipped);
+  const question = reverse ? (card?.back ?? '') : (card?.front ?? '');
+  const answer = reverse ? (card?.front ?? '') : (card?.back ?? '');
+  const imageUrl = card?.image_url || null;
 
   useEffect(() => {
     setFlipped(isFlipped);
@@ -30,7 +34,7 @@ export default function FlashCard({
     >
       <div
         className={`
-          relative w-full h-[380px] sm:h-[420px] lg:h-[480px]
+          relative w-full min-h-[380px] sm:min-h-[420px] lg:min-h-[480px]
           transition-transform duration-700 ease-out
           preserve-3d cursor-pointer
           ${flipped ? 'rotate-y-180' : ''}
@@ -47,7 +51,14 @@ export default function FlashCard({
           bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-10 lg:p-12
           flex flex-col items-center justify-center text-center
         ">
-          <div className="w-full max-h-full overflow-y-auto">
+          <div className="w-full max-h-full overflow-y-auto flex flex-col items-center">
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt=""
+                className="max-h-40 sm:max-h-48 rounded-lg object-contain mb-4"
+              />
+            )}
             <p className="text-xs sm:text-sm uppercase tracking-wider text-gray-500 mb-4">
               Вопрос
             </p>
@@ -55,7 +66,7 @@ export default function FlashCard({
               text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900
               leading-tight break-words whitespace-pre-wrap
             ">
-              {card?.front || 'Нет вопроса'}
+              {question || 'Нет вопроса'}
             </h2>
 
             {card?.tags?.length > 0 && (
@@ -70,14 +81,13 @@ export default function FlashCard({
                 ))}
               </div>
             )}
+            {!flipped && !disabled && (
+              <div className="mt-8 text-gray-400 text-sm flex items-center gap-2">
+                <ChevronDown size={16} className="animate-bounce" />
+                Нажмите, чтобы показать ответ
+              </div>
+            )}
           </div>
-
-          {!flipped && !disabled && (
-            <div className="mt-8 text-gray-400 text-sm flex items-center gap-2">
-              <ChevronDown size={16} className="animate-bounce" />
-              Нажмите, чтобы показать ответ
-            </div>
-          )}
         </div>
 
         <div className="
@@ -85,7 +95,14 @@ export default function FlashCard({
           bg-gradient-to-b from-white to-gray-50 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-10 lg:p-12
           flex flex-col items-center justify-center text-center
         ">
-          <div className="w-full max-h-full overflow-y-auto">
+          <div className="w-full max-h-full overflow-y-auto flex flex-col items-center">
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt=""
+                className="max-h-40 sm:max-h-48 rounded-lg object-contain mb-4"
+              />
+            )}
             <p className="text-xs sm:text-sm uppercase tracking-wider text-gray-500 mb-4">
               Ответ
             </p>
@@ -93,7 +110,7 @@ export default function FlashCard({
               text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-800
               leading-relaxed break-words whitespace-pre-wrap
             ">
-              {card?.back || 'Нет ответа'}
+              {answer || 'Нет ответа'}
             </p>
           </div>
         </div>

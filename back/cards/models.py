@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings  # ← ВАЖНО!
+from django.conf import settings
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from datetime import timedelta
@@ -8,7 +8,7 @@ from datetime import timedelta
 class Folder(models.Model):
     """Папка для организации колод"""
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # ← ИСПРАВЛЕНО
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE, 
         related_name='folders'
     )
@@ -60,7 +60,7 @@ class Folder(models.Model):
 
 class Deck(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # ← ИСПРАВЛЕНО
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE, 
         related_name='decks'
     )
@@ -88,12 +88,24 @@ class Deck(models.Model):
 
 
 class Card(models.Model):
+    CARD_TYPE_BASIC = 'basic'
+    CARD_TYPE_MULTIPLE_CHOICE = 'multiple_choice'
+    CARD_TYPE_CHOICES = [
+        (CARD_TYPE_BASIC, 'Обычная'),
+        (CARD_TYPE_MULTIPLE_CHOICE, 'Множественный выбор'),
+    ]
+
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name='cards')
     front = models.TextField('Вопрос')
     back = models.TextField('Ответ')
+    image = models.ImageField('Изображение', upload_to='cards/images/', null=True, blank=True)
+    card_type = models.CharField(
+        'Тип карточки',
+        max_length=20,
+        choices=CARD_TYPE_CHOICES,
+        default=CARD_TYPE_BASIC
+    )
     tags = TaggableManager(blank=True)
-    
-    # Spaced Repetition (SM-2)
     ease_factor = models.FloatField('Фактор легкости', default=2.5)
     interval = models.IntegerField('Интервал (дни)', default=0)
     repetitions = models.IntegerField('Повторения', default=0)
@@ -108,6 +120,10 @@ class Card(models.Model):
         ordering = ['next_review']
         verbose_name = 'Карточка'
         verbose_name_plural = 'Карточки'
+        indexes = [
+            models.Index(fields=['next_review']),
+            models.Index(fields=['deck', 'next_review']),
+        ]
 
     def __str__(self):
         return f"{self.front[:50]}..."
@@ -115,7 +131,7 @@ class Card(models.Model):
 
 class StudySession(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # ← ИСПРАВЛЕНО
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE, 
         related_name='study_sessions'
     )
@@ -132,6 +148,7 @@ class StudySession(models.Model):
     cards_correct = models.IntegerField('Правильных ответов', default=0)
     points_earned = models.IntegerField('Заработано очков', default=0)
     is_practice_mode = models.BooleanField('Режим практики', default=False)
+    is_reversed = models.BooleanField('Реверс (ответ → вопрос)', default=False)
 
     class Meta:
         ordering = ['-started_at']

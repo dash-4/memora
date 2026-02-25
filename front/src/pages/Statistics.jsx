@@ -36,7 +36,6 @@ export default function Statistics() {
       setStats(statsResponse.data);
       setDecksStats(decksResponse.data);
     } catch (error) {
-      console.error("Error fetching statistics:", error);
       toast.error("Ошибка загрузки статистики");
     } finally {
       setLoading(false);
@@ -80,10 +79,10 @@ export default function Statistics() {
             <BarChart3 className="text-purple-600" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="heading-page">
               Статистика
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-0.5">
+            <p className="text-muted text-sm sm:text-base mt-0.5">
               Ваш прогресс и достижения
             </p>
           </div>

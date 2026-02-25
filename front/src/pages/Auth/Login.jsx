@@ -33,7 +33,6 @@ export default function Login() {
       toast.success('Вход выполнен успешно!', { id: 'login-success' });
       navigate('/dashboard');
     } catch (error) {
-      console.error('Login error:', error);
       
       const errorData = error.response?.data;
       

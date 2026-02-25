@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Calendar, Dumbbell, Info, Clock, Sparkles } from 'lucide-react';
+import { AlertCircle, Calendar, Dumbbell, Info, Clock, Sparkles, Link2, ClipboardList } from 'lucide-react';
 import api from '@/services/api';
 import Layout from '@/components/layout/Layout';
 import CardModal from '@/components/cards/CardModal';
@@ -28,17 +28,22 @@ export default function DeckDetail() {
     status: '',
     tag: '',
   });
+  const [studyReverse, setStudyReverse] = useState(false);
 
   const fetchDeckDetails = useCallback(async () => {
     try {
+      const params = {};
+      if (filters.status) params.status = filters.status;
+      if (filters.tag) params.tag = filters.tag;
       const [deckRes, cardsRes] = await Promise.all([
         api.get(`/decks/${id}/`),
-        api.get(`/decks/${id}/cards/`),
+        api.get(`/decks/${id}/cards/`, { params }),
       ]);
 
       setDeck(deckRes.data);
 
       let fetchedCards = cardsRes.data.cards || cardsRes.data;
+      setAllCards(fetchedCards);
 
       if (filters.search) {
         fetchedCards = fetchedCards.filter(
@@ -50,12 +55,7 @@ export default function DeckDetail() {
       }
 
       setCards(fetchedCards);
-
-      if (!filters.search && !filters.status && !filters.tag) {
-        setAllCards(fetchedCards);
-      }
     } catch (err) {
-      console.error('Ошибка загрузки колоды:', err);
       toast.error('Не удалось загрузить колоду');
     } finally {
       setLoading(false);
@@ -67,7 +67,6 @@ export default function DeckDetail() {
       const { data } = await api.get('/cards/popular_tags/');
       setPopularTags(data);
     } catch (err) {
-      console.error('Ошибка загрузки популярных тегов:', err);
     }
   }, []);
 
@@ -91,7 +90,6 @@ export default function DeckDetail() {
       toast.success('Колода удалена');
       navigate('/decks');
     } catch (err) {
-      console.error('Ошибка удаления колоды:', err);
       toast.error('Не удалось удалить колоду');
     }
   }, [id, navigate]);
@@ -105,7 +103,6 @@ export default function DeckDetail() {
       setAllCards((prev) => prev.filter((c) => c.id !== cardId));
       toast.success('Карточка удалена');
     } catch (err) {
-      console.error('Ошибка удаления карточки:', err);
       toast.error('Не удалось удалить карточку');
     }
   }, []);
@@ -169,12 +166,12 @@ export default function DeckDetail() {
 
         {/* Подсказка когда можно начать */}
         {statsCards.length === 0 && (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+          <div className="alert-info p-4 sm:p-5 rounded-xl">
             <div className="flex items-start gap-3">
               <Info className="text-blue-600 shrink-0 mt-0.5" size={20} />
               <div>
-                <h4 className="text-sm font-semibold text-blue-900 mb-1">Как начать обучение?</h4>
-                <p className="text-sm text-blue-700">
+                <h4 className="text-sm font-semibold mb-1">Как начать обучение?</h4>
+                <p className="text-sm opacity-90">
                   Добавьте хотя бы одну карточку в колоду, и кнопка "Начать обучение" станет активной. 
                   Рекомендуем начать с 5-10 карточек.
                 </p>
@@ -184,14 +181,14 @@ export default function DeckDetail() {
         )}
 
         {statsCards.length > 0 && newCardsCount === 0 && !hasDueCards && (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+          <div className="alert-success p-4 sm:p-5 rounded-xl">
             <div className="flex items-start gap-3">
               <Sparkles className="text-green-600 shrink-0 mt-0.5" size={20} />
               <div>
-                <h4 className="text-sm font-semibold text-green-900 mb-1">
+                <h4 className="text-sm font-semibold mb-1">
                   Отличная работа! 🎉
                 </h4>
-                <p className="text-sm text-green-700">
+                <p className="text-sm opacity-90">
                   На сегодня карточек нет. Следующее повторение появится по расписанию. 
                   Можете потренироваться в свободном режиме или добавить новые карточки.
                 </p>
@@ -201,14 +198,14 @@ export default function DeckDetail() {
         )}
 
         {statsCards.length > 0 && (newCardsCount > 0 || hasDueCards) && (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+          <div className="alert-info p-4 sm:p-5 rounded-xl">
             <div className="flex items-start gap-3">
               <Clock className="text-blue-600 shrink-0 mt-0.5" size={20} />
               <div>
-                <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                <h4 className="text-sm font-semibold mb-1">
                   Готовы к обучению!
                 </h4>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm opacity-90">
                   {newCardsCount > 0 && (
                     <span className="font-medium">{newCardsCount} новых карточек</span>
                   )}
@@ -220,6 +217,22 @@ export default function DeckDetail() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Реверс: вопрос ↔ ответ */}
+        {statsCards.length > 0 && (
+          <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={studyReverse}
+                onChange={(e) => setStudyReverse(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Реверс (ответ → вопрос)</span>
+            </label>
+            <span className="text-xs text-gray-500">Тренировать в обе стороны</span>
           </div>
         )}
 
@@ -282,7 +295,7 @@ export default function DeckDetail() {
             {cardsForLearning > 0 ? (
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 shadow-md hover:shadow-lg transition-all"
-                onClick={() => navigate(`/study?deck=${id}&mode=learning`)}
+                onClick={() => navigate(`/study?deck=${id}&mode=learning${studyReverse ? '&reverse=1' : ''}`)}
               >
                 <Sparkles size={18} className="mr-2" />
                 Начать обучение
@@ -355,10 +368,102 @@ export default function DeckDetail() {
               <Button
                 variant="secondary"
                 className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-medium py-3"
-                onClick={() => navigate(`/study?deck=${id}&mode=practice`)}
+                onClick={() => navigate(`/study?deck=${id}&mode=practice${studyReverse ? '&reverse=1' : ''}`)}
               >
                 <Dumbbell size={18} className="mr-2" />
                 Начать тренировку
+              </Button>
+            ) : (
+              <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">
+                Добавьте карточки
+              </div>
+            )}
+          </Card>
+
+          {/* Режим «Подбор» */}
+          <Card className={`border-2 transition-all duration-200 ${
+            statsCards.length >= 2
+              ? 'border-amber-200 hover:border-amber-400 hover:shadow-lg'
+              : 'border-gray-200 opacity-75'
+          }`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                statsCards.length >= 2 ? 'bg-amber-100' : 'bg-gray-200'
+              }`}>
+                <Link2 size={24} className={statsCards.length >= 2 ? 'text-amber-600' : 'text-gray-400'} />
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                statsCards.length >= 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
+              }`}>
+                Игровой режим
+              </span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Подбор пар</h3>
+            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+              Сопоставьте вопросы и ответы. Подходит для запоминания пар (слово — перевод, термин — определение).
+            </p>
+            <div className={`p-3 rounded-lg mb-4 ${statsCards.length >= 2 ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
+              <div className="flex items-center justify-between">
+                <p className="text-gray-600 text-sm font-medium">Нужно минимум 2 карточки</p>
+                <p className={`text-2xl font-bold ${statsCards.length >= 2 ? 'text-amber-600' : 'text-gray-400'}`}>
+                  {statsCards.length}
+                </p>
+              </div>
+            </div>
+            {statsCards.length >= 2 ? (
+              <Button
+                variant="secondary"
+                className="w-full border-2 border-amber-600 text-amber-700 hover:bg-amber-50 font-medium py-3"
+                onClick={() => navigate(`/study?deck=${id}&mode=matching${studyReverse ? '&reverse=1' : ''}`)}
+              >
+                <Link2 size={18} className="mr-2" />
+                Начать подбор
+              </Button>
+            ) : (
+              <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">
+                Добавьте карточки
+              </div>
+            )}
+          </Card>
+
+          {/* Режим «Тест» */}
+          <Card className={`border-2 transition-all duration-200 ${
+            statsCards.length > 0
+              ? 'border-emerald-200 hover:border-emerald-400 hover:shadow-lg'
+              : 'border-gray-200 opacity-75'
+          }`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                statsCards.length > 0 ? 'bg-emerald-100' : 'bg-gray-200'
+              }`}>
+                <ClipboardList size={24} className={statsCards.length > 0 ? 'text-emerald-600' : 'text-gray-400'} />
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                statsCards.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+              }`}>
+                Тест / экзамен
+              </span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Тест</h3>
+            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+              Выберите правильный ответ из вариантов. Удобно для самопроверки перед экзаменом или зачётом.
+            </p>
+            <div className={`p-3 rounded-lg mb-4 ${statsCards.length > 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50'}`}>
+              <div className="flex items-center justify-between">
+                <p className="text-gray-600 text-sm font-medium">Доступно:</p>
+                <p className={`text-2xl font-bold ${statsCards.length > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                  {statsCards.length}
+                </p>
+              </div>
+            </div>
+            {statsCards.length > 0 ? (
+              <Button
+                variant="secondary"
+                className="w-full border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-medium py-3"
+                onClick={() => navigate(`/study?deck=${id}&mode=test${studyReverse ? '&reverse=1' : ''}`)}
+              >
+                <ClipboardList size={18} className="mr-2" />
+                Начать тест
               </Button>
             ) : (
               <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">

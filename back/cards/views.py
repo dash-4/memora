@@ -3,19 +3,25 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
+from django.core.cache import cache
+from django.conf import settings as django_settings
 from django.db.models import Q, Count, Avg
 from datetime import date, timedelta, datetime
 from calendar import monthrange
 from taggit.models import Tag
 from collections import defaultdict
+import random
 
 from .models import Deck, Card, StudySession, CardReview, Folder
+from .sm2 import apply_sm2
 from .serializers import (
     DeckSerializer, CardSerializer, StudySessionSerializer,
     CardReviewSerializer, FolderTreeSerializer, FolderSerializer
 )
 from accounts.models import UserProfile
+from pet.models import StudyPet
 
 
 class DeckViewSet(viewsets.ModelViewSet):
@@ -43,13 +49,26 @@ class DeckViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def cards(self, request, pk=None):
         deck = self.get_object()
-        cards = self._apply_card_filters(deck.cards.all())
-        serializer = CardSerializer(cards, many=True)
-        
+        qs = self._apply_card_filters(deck.cards.all())
+        use_pagination = 'page' in request.query_params or 'page_size' in request.query_params
+        if use_pagination:
+            paginator = PageNumberPagination()
+            paginator.page_size = min(int(request.query_params.get('page_size', 50)), 200)
+            page = paginator.paginate_queryset(qs, request)
+            serializer = CardSerializer(page, many=True, context={'request': request})
+            return Response({
+                'deck': DeckSerializer(deck).data,
+                'cards': serializer.data,
+                'count': paginator.page.paginator.count,
+                'next': paginator.get_next_link(),
+                'previous': paginator.get_previous_link(),
+            })
+        cards_list = list(qs[:500])
+        serializer = CardSerializer(cards_list, many=True, context={'request': request})
         return Response({
             'deck': DeckSerializer(deck).data,
             'cards': serializer.data,
-            'count': len(serializer.data)
+            'count': len(serializer.data),
         })
     
     def _apply_card_filters(self, queryset):
@@ -114,6 +133,10 @@ class CardViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def popular_tags(self, request):
+        cache_key = f'popular_tags_{request.user.id}'
+        data = cache.get(cache_key)
+        if data is not None:
+            return Response(data)
         tags = Tag.objects.filter(
             taggit_taggeditem_items__content_type__model='card',
             taggit_taggeditem_items__object_id__in=Card.objects.filter(
@@ -122,8 +145,9 @@ class CardViewSet(viewsets.ModelViewSet):
         ).annotate(
             count=Count('taggit_taggeditem_items')
         ).order_by('-count')[:20]
-        
-        return Response([{'name': tag.name, 'count': tag.count} for tag in tags])
+        data = [{'name': tag.name, 'count': tag.count} for tag in tags]
+        cache.set(cache_key, data, getattr(django_settings, 'CACHE_TAGS_TTL', 300))
+        return Response(data)
 
 
 class StudyViewSet(viewsets.GenericViewSet):
@@ -149,8 +173,7 @@ class StudyViewSet(viewsets.GenericViewSet):
                 return Response({'error': 'Invalid deck_id'}, status=400)
         
         cards = queryset.order_by('next_review')[:limit]
-        serializer = CardSerializer(cards, many=True)
-        
+        serializer = CardSerializer(cards, many=True, context={'request': request})
         return Response({'cards': serializer.data, 'count': len(serializer.data)})
     
     @action(detail=False, methods=['get'])
@@ -167,25 +190,95 @@ class StudyViewSet(viewsets.GenericViewSet):
             is_suspended=False
         ).order_by('?')[:limit]
         
-        serializer = CardSerializer(cards, many=True)
+        serializer = CardSerializer(cards, many=True, context={'request': request})
         return Response({
             'cards': serializer.data,
             'count': len(serializer.data),
             'mode': 'practice'
         })
+
+    @action(detail=False, methods=['get'])
+    def matching_cards(self, request):
+        """Карточки для режима «Подбор»: N карточек с полями question/answer (с учётом реверса)."""
+        deck_id = request.query_params.get('deck_id')
+        limit = int(request.query_params.get('limit', 10))
+        reverse = request.query_params.get('reverse', 'false').lower() == 'true'
+        if not deck_id:
+            return Response({'error': 'deck_id is required'}, status=400)
+        cards = Card.objects.filter(
+            deck__user=request.user,
+            deck_id=deck_id,
+            is_suspended=False,
+        ).order_by('?')[:limit]
+        serializer = CardSerializer(cards, many=True, context={'request': request})
+        out = []
+        for c in serializer.data:
+            out.append({
+                **c,
+                'question': c['back'] if reverse else c['front'],
+                'answer': c['front'] if reverse else c['back'],
+            })
+        return Response({'cards': out, 'count': len(out)})
+
+    @action(detail=False, methods=['get'])
+    def test_cards(self, request):
+        """Карточки для режима «Тест»: каждая с вариантами ответов (1 правильный + неправильные из колоды)."""
+        deck_id = request.query_params.get('deck_id')
+        limit = int(request.query_params.get('limit', 20))
+        reverse = request.query_params.get('reverse', 'false').lower() == 'true'
+        num_wrong = 3
+        if not deck_id:
+            return Response({'error': 'deck_id is required'}, status=400)
+        cards = list(Card.objects.filter(
+            deck__user=request.user,
+            deck_id=deck_id,
+            is_suspended=False,
+        ).order_by('?')[:limit])
+        other_answers = list(
+            Card.objects.filter(deck_id=deck_id, is_suspended=False)
+            .exclude(id__in=[c.id for c in cards])
+            .values_list('back' if not reverse else 'front', flat=True)
+        )
+        if not other_answers:
+            other_answers = list(
+                Card.objects.filter(deck_id=deck_id)
+                .values_list('back' if not reverse else 'front', flat=True)
+            )
+        serializer = CardSerializer(cards, many=True, context={'request': request})
+        result = []
+        for card_data in serializer.data:
+            correct = card_data['back'] if not reverse else card_data['front']
+            question = card_data['front'] if not reverse else card_data['back']
+            wrong = [a for a in other_answers if a != correct][:num_wrong]
+            while len(wrong) < num_wrong and other_answers:
+                wrong = list(set(wrong + [random.choice(other_answers)]))[:num_wrong]
+            options = [correct] + wrong
+            random.shuffle(options)
+            result.append({
+                **card_data,
+                'question': question,
+                'correct_answer': correct,
+                'options': options,
+            })
+        return Response({'cards': result, 'count': len(result)})
     
     @action(detail=False, methods=['post'])
     def start_session(self, request):
         deck_id = request.data.get('deck_id')
         mode = request.data.get('mode', 'learning')
-        
+        reverse = request.data.get('reverse', False)
+        is_practice = mode in ('practice', 'matching', 'test')
         session = StudySession.objects.create(
             user=request.user,
             deck_id=deck_id if deck_id else None,
-            is_practice_mode=(mode == 'practice')
+            is_practice_mode=is_practice,
+            is_reversed=bool(reverse),
         )
-        
-        return Response({'session_id': session.id, 'mode': mode}, status=201)
+        return Response({
+            'session_id': session.id,
+            'mode': mode,
+            'reverse': session.is_reversed,
+        }, status=201)
     
     @action(detail=False, methods=['post'])
     def submit_review(self, request):
@@ -204,7 +297,7 @@ class StudyViewSet(viewsets.GenericViewSet):
         interval_before = card.interval
         
         if not session.is_practice_mode:
-            card = self._apply_sm2(card, rating)
+            card = apply_sm2(card, rating)
         
         CardReview.objects.create(
             session=session,
@@ -227,35 +320,10 @@ class StudyViewSet(viewsets.GenericViewSet):
             self._update_user_profile(request.user, rating)
         
         return Response({
-            'card': CardSerializer(card).data,
+            'card': CardSerializer(card, context={'request': request}).data,
             'points_earned': rating if not session.is_practice_mode else 0,
             'current_streak': request.user.profile.current_streak if not session.is_practice_mode else 0
         })
-    
-    def _apply_sm2(self, card, rating):
-        if rating == 1:
-            card.repetitions = 0
-            card.interval = 0
-            card.next_review = timezone.now() + timedelta(minutes=10)
-        else:
-            if card.repetitions == 0:
-                card.interval = 1
-            elif card.repetitions == 1:
-                card.interval = 6
-            else:
-                card.interval = int(card.interval * card.ease_factor)
-            
-            card.repetitions += 1
-            card.next_review = timezone.now() + timedelta(days=card.interval)
-            
-            if rating == 2:
-                card.ease_factor = max(1.3, card.ease_factor - 0.15)
-            elif rating == 4:
-                card.ease_factor = min(2.5, card.ease_factor + 0.15)
-        
-        card.last_reviewed = timezone.now()
-        card.save()
-        return card
     
     def _update_user_profile(self, user, rating):
         profile, _ = UserProfile.objects.get_or_create(user=user)
@@ -278,16 +346,30 @@ class StudyViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['post'])
     def end_session(self, request):
         session_id = request.data.get('session_id')
-        
         try:
             session = StudySession.objects.get(id=session_id, user=request.user)
         except StudySession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
-        
         session.ended_at = timezone.now()
         session.save()
-        
-        return Response(StudySessionSerializer(session).data)
+        data = StudySessionSerializer(session).data
+        if session.cards_studied > 0:
+            accuracy = session.cards_correct / session.cards_studied
+            xp_amount = int(session.cards_studied * (1 + accuracy))
+            pet, _ = StudyPet.objects.get_or_create(user=request.user, defaults={'pet_type': 'cat'})
+            pet.add_xp(xp_amount)
+            pet.update_streak(timezone.now().date())
+            data['pet_xp'] = pet.xp
+            data['pet_level'] = pet.level
+        else:
+            pet = StudyPet.objects.filter(user=request.user).first()
+            if pet:
+                data['pet_xp'] = pet.xp
+                data['pet_level'] = pet.level
+            else:
+                data['pet_xp'] = 0
+                data['pet_level'] = 1
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def schedule(self, request):
@@ -405,12 +487,15 @@ class StatisticsViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['get'])
     def dashboard(self, request):
         user = request.user
+        cache_key = f'stats_dashboard_{user.id}'
+        data = cache.get(cache_key)
+        if data is not None:
+            return Response(data)
         profile = user.profile
         today = timezone.now().date()
         week_ago = today - timedelta(days=7)
         now = timezone.now()
-        
-        return Response({
+        data = {
             'cards': {
                 'total': Card.objects.filter(deck__user=user).count(),
                 'due_today': Card.objects.filter(
@@ -445,7 +530,9 @@ class StatisticsViewSet(viewsets.GenericViewSet):
                 'longest_streak': profile.longest_streak,
                 'total_cards_studied': profile.total_cards_studied
             }
-        })
+        }
+        cache.set(cache_key, data, getattr(django_settings, 'CACHE_STATS_TTL', 120))
+        return Response(data)
     
     @action(detail=False, methods=['get'])
     def learning_stats(self, request):

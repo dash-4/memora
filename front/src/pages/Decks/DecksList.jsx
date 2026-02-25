@@ -29,7 +29,13 @@ export default function DecksList() {
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const [showCreateDeckModal, setShowCreateDeckModal] = useState(false);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
@@ -51,14 +57,13 @@ export default function DecksList() {
 
   useEffect(() => {
     applyFilters();
-  }, [decks, searchQuery, sortBy]);
+  }, [decks, debouncedSearch, sortBy]);
 
   const fetchFoldersTree = async () => {
     try {
       const { data } = await api.get('/folders/tree/');
       setFolders(data);
     } catch (err) {
-      console.error('Ошибка загрузки дерева папок:', err);
     }
   };
 
@@ -70,7 +75,6 @@ export default function DecksList() {
       setCurrentFolder(null);
       setSubfolders([]);
     } catch (err) {
-      console.error(err);
       toast.error('Ошибка загрузки колод');
     } finally {
       setLoading(false);
@@ -85,7 +89,6 @@ export default function DecksList() {
       setSubfolders(data.subfolders || []);
       setDecks(data.decks || []);
     } catch (err) {
-      console.error(err);
       toast.error('Ошибка загрузки содержимого папки');
     } finally {
       setLoading(false);
@@ -95,8 +98,8 @@ export default function DecksList() {
   const applyFilters = () => {
     let result = [...decks];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       result = result.filter(
         (d) =>
           d.name.toLowerCase().includes(q) ||
@@ -131,6 +134,19 @@ export default function DecksList() {
     setIsSidebarOpen(false);
   };
 
+  const handleDeleteFolder = async (id) => {
+    if (!window.confirm('Удалить папку? Все вложенные колоды останутся без папки.')) return;
+    try {
+      await api.delete(`/folders/${id}/`);
+      if (selectedFolderId === id) {
+        setSelectedFolderId(null);
+      }
+      fetchFoldersTree();
+    } catch {
+      toast.error('Не удалось удалить папку');
+    }
+  };
+
   const handleToggleExpand = (id) => {
     setExpandedFolders((prev) => {
       const next = new Set(prev);
@@ -152,6 +168,7 @@ export default function DecksList() {
               onCreateFolder={() => setShowCreateFolderModal(true)}
               expandedFolders={expandedFolders}
               onToggleExpand={handleToggleExpand}
+              onDeleteFolder={handleDeleteFolder}
             />
           </div>
           <div className="flex-1 flex items-center justify-center">
@@ -175,6 +192,7 @@ export default function DecksList() {
             onCreateFolder={() => setShowCreateFolderModal(true)}
             expandedFolders={expandedFolders}
             onToggleExpand={handleToggleExpand}
+            onDeleteFolder={handleDeleteFolder}
           />
         </div>
 
@@ -205,6 +223,7 @@ export default function DecksList() {
                   }}
                   expandedFolders={expandedFolders}
                   onToggleExpand={handleToggleExpand}
+                  onDeleteFolder={handleDeleteFolder}
                 />
               </div>
             </div>
@@ -231,15 +250,15 @@ export default function DecksList() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="w-full sm:w-auto">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h1 className="heading-page">
                   {currentFolder ? currentFolder.name : 'Все колоды'}
                 </h1>
                 {currentFolder?.description && (
-                  <p className="text-sm sm:text-base text-gray-600 mt-1">
+                  <p className="text-muted text-sm sm:text-base mt-1">
                     {currentFolder.description}
                   </p>
                 )}
-                <p className="text-sm sm:text-base text-gray-600 mt-2">
+                <p className="text-muted text-sm sm:text-base mt-2">
                   {filteredDecks.length}{' '}
                   {filteredDecks.length !== decks.length && `из ${decks.length}`}{' '}
                   {filteredDecks.length === 1 ? 'колода' : filteredDecks.length < 5 ? 'колоды' : 'колод'}

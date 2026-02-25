@@ -15,6 +15,7 @@ urlpatterns = [
     
     # API
     path('api/auth/', include('accounts.urls')),
+    path('api/pet/', include('pet.urls')),
     path('api/', include('cards.urls')),
 ]
 

@@ -12,7 +12,6 @@ export const TagInput = ({ value = [], onChange, placeholder = 'Добавить
         const response = await cardsAPI.getPopularTags();
         setSuggestions(response.data);
       } catch (error) {
-        console.error('Ошибка загрузки тегов:', error);
       }
     };
     loadTags();

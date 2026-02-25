@@ -85,9 +85,6 @@ export default function Register() {
       // Редирект на логин
       navigate('/login');
     } catch (error) {
-      console.error('Register error:', error);
-      console.error('Response data:', error.response?.data);
-      console.error('Response status:', error.response?.status);
 
       const errorData = error.response?.data;
 

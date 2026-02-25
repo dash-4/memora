@@ -103,9 +103,17 @@ export const studyAPI = {
   getDueCards: (params = {}) => api.get('/study/due_cards/', { params }),
   
   // Получить все карточки для практики
-  getAllCards: (deckId, limit = 20) => 
+  getAllCards: (deckId, limit = 20) =>
     api.get('/study/all_cards/', { params: { deck_id: deckId, limit } }),
-  
+
+  // Карточки для режима «Подбор»
+  getMatchingCards: (deckId, limit = 10, reverse = false) =>
+    api.get('/study/matching_cards/', { params: { deck_id: deckId, limit, reverse } }),
+
+  // Карточки для режима «Тест» (с вариантами ответов)
+  getTestCards: (deckId, limit = 20, reverse = false) =>
+    api.get('/study/test_cards/', { params: { deck_id: deckId, limit, reverse } }),
+
   // Начать сессию обучения
   startSession: (data) => api.post('/study/start_session/', data),
   
@@ -120,6 +128,11 @@ export const studyAPI = {
   
   // Получить базовую статистику
   getStats: () => api.get('/study/stats/'),
+};
+
+export const petAPI = {
+  get: () => api.get('/pet/'),
+  addXP: (amount) => api.post('/pet/xp/', { amount }),
 };
 
 // 📊 СТАТИСТИКА

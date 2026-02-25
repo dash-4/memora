@@ -28,7 +28,6 @@ export default function CreateDeckModal({ folderId, onClose, onSuccess }) {
       toast.success('Колода создана! 🎉');
       onSuccess();
     } catch (error) {
-      console.error('Ошибка создания колоды:', error);
       const msg = error.response?.data?.detail ||
                   error.response?.data?.message ||
                   'Не удалось создать колоду';
