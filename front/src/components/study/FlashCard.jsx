@@ -12,7 +12,6 @@ export default function FlashCard({
   const [flipped, setFlipped] = useState(isFlipped);
   const question = reverse ? (card?.back ?? '') : (card?.front ?? '');
   const answer = reverse ? (card?.front ?? '') : (card?.back ?? '');
-  const imageUrl = card?.image_url || null;
 
   useEffect(() => {
     setFlipped(isFlipped);
@@ -52,13 +51,6 @@ export default function FlashCard({
           flex flex-col items-center justify-center text-center
         ">
           <div className="w-full max-h-full overflow-y-auto flex flex-col items-center">
-            {imageUrl && (
-              <img
-                src={imageUrl}
-                alt=""
-                className="max-h-40 sm:max-h-48 rounded-lg object-contain mb-4"
-              />
-            )}
             <p className="text-xs sm:text-sm uppercase tracking-wider text-gray-500 mb-4">
               Вопрос
             </p>
@@ -69,18 +61,6 @@ export default function FlashCard({
               {question || 'Нет вопроса'}
             </h2>
 
-            {card?.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6 justify-center">
-                {card.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs sm:text-sm font-medium"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
             {!flipped && !disabled && (
               <div className="mt-8 text-gray-400 text-sm flex items-center gap-2">
                 <ChevronDown size={16} className="animate-bounce" />
@@ -96,13 +76,6 @@ export default function FlashCard({
           flex flex-col items-center justify-center text-center
         ">
           <div className="w-full max-h-full overflow-y-auto flex flex-col items-center">
-            {imageUrl && (
-              <img
-                src={imageUrl}
-                alt=""
-                className="max-h-40 sm:max-h-48 rounded-lg object-contain mb-4"
-              />
-            )}
             <p className="text-xs sm:text-sm uppercase tracking-wider text-gray-500 mb-4">
               Ответ
             </p>

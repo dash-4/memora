@@ -1,11 +1,10 @@
 export const CardFilters = ({ 
   filters, 
   onFilterChange, 
-  popularTags = [],
   showDeckFilter = false,
   decks = []
 }) => {
-  const hasActiveFilters = filters.search || filters.status || filters.tag || filters.deck_id;
+  const hasActiveFilters = filters.search || filters.status || filters.deck_id;
 
   const resetFilters = () => {
     onFilterChange('search', '');
@@ -93,26 +92,6 @@ export const CardFilters = ({
           </select>
         </div>
 
-        {popularTags.length > 0 && (
-          <div className="min-w-[180px]">
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Тег
-            </label>
-            <select
-              value={filters.tag}
-              onChange={(e) => onFilterChange('tag', e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-            >
-              <option value="">Все теги</option>
-              {popularTags.map(tag => (
-                <option key={tag.name} value={tag.name}>
-                  #{tag.name} ({tag.count})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {hasActiveFilters && (
           <button
             onClick={resetFilters}
@@ -172,17 +151,6 @@ export const CardFilters = ({
             </span>
           )}
           
-          {filters.tag && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-sm font-medium">
-              Тег: #{filters.tag}
-              <button 
-                onClick={() => onFilterChange('tag', '')}
-                className="hover:bg-blue-100 rounded-full w-4 h-4 flex items-center justify-center transition-colors"
-              >
-                ×
-              </button>
-            </span>
-          )}
         </div>
       )}
     </div>

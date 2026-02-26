@@ -8,14 +8,13 @@ export default function CardsList({
   cards,
   statsCards,
   filters,
-  popularTags,
   onFilterChange,
   onCreateCard,
   onEditCard,
   onDeleteCard,
   onResetFilters,
 }) {
-  const hasFilters = filters.search || filters.status || filters.tag;
+  const hasFilters = filters.search || filters.status;
 
   return (
     <Card>
@@ -37,7 +36,6 @@ export default function CardsList({
       <CardFilters
         filters={filters}
         onFilterChange={onFilterChange}
-        popularTags={popularTags}
       />
 
       {cards.length > 0 ? (

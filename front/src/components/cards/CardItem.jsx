@@ -16,16 +16,6 @@ export default function CardItem({ card, onEdit, onDelete }) {
           <p className="font-medium text-gray-900 mb-2 break-words">{card.front}</p>
           <p className="text-gray-600 text-sm break-words">{card.back}</p>
 
-          {card.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {card.tags.map(tag => (
-                <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
           <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-500">
             <span className="flex items-center">
               <span className={`w-2 h-2 rounded-full mr-1 bg-${statusColor}-500`}></span>

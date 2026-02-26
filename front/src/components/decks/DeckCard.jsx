@@ -11,7 +11,7 @@ export default function DeckCard({ deck }) {
             className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
             style={{ backgroundColor: (deck.color || '#3B82F6') + '20' }}
           >
-            <BookOpen size={24} style={{ color: deck.color || '#3B82F6' }} />
+            <BookOpen size={25} style={{ color: deck.color || '#3B82F6' }} />
           </div>
         </div>
 
@@ -28,11 +28,8 @@ export default function DeckCard({ deck }) {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-gray-500 pt-4 border-t mt-auto">
-          <div className="flex items-center">
-            <BookOpen size={16} className="mr-1 shrink-0" />
-            <span>{deck.total_cards || 0} карточек</span>
-          </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-gray-500  mt-auto">
+         
           {deck.cards_due_today > 0 && (
             <div className="flex items-center text-blue-600 font-medium">
               <Calendar size={16} className="mr-1 shrink-0" />

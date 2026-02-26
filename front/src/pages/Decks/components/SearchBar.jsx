@@ -39,7 +39,6 @@ export default function SearchBar({
           <option value="recent">Недавние</option>
           <option value="name">По алфавиту</option>
           <option value="cards">Больше карточек</option>
-          <option value="due">На повторение</option>
         </select>
       </div>
 

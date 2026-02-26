@@ -253,16 +253,8 @@ export default function DecksList() {
                 <h1 className="heading-page">
                   {currentFolder ? currentFolder.name : 'Все колоды'}
                 </h1>
-                {currentFolder?.description && (
-                  <p className="text-muted text-sm sm:text-base mt-1">
-                    {currentFolder.description}
-                  </p>
-                )}
-                <p className="text-muted text-sm sm:text-base mt-2">
-                  {filteredDecks.length}{' '}
-                  {filteredDecks.length !== decks.length && `из ${decks.length}`}{' '}
-                  {filteredDecks.length === 1 ? 'колода' : filteredDecks.length < 5 ? 'колоды' : 'колод'}
-                </p>
+                
+               
               </div>
 
               <div className="flex gap-2 w-full sm:w-auto">

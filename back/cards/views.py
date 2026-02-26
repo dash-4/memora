@@ -124,12 +124,24 @@ class CardViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        deck_id = self.request.data.get('deck')
+        """
+        Создание карточки:
+        - жёстко привязываем колоду к текущему пользователю;
+        - аккуратно обрабатываем неверный / отсутствующий deck, чтобы не было 500.
+        """
+        deck_raw = self.request.data.get('deck')
+
+        try:
+            deck_id = int(deck_raw)
+        except (TypeError, ValueError):
+            raise ValidationError({'deck': 'Некорректный идентификатор колоды'})
+
         try:
             deck = Deck.objects.get(id=deck_id, user=self.request.user)
-            serializer.save(deck=deck)
         except Deck.DoesNotExist:
             raise ValidationError({'deck': 'Колода не найдена'})
+
+        serializer.save(deck=deck)
     
     @action(detail=False, methods=['get'])
     def popular_tags(self, request):

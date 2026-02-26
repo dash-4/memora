@@ -1,15 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Brain, Menu } from 'lucide-react';
 import { authService } from '@/services/auth'; 
+import { useState } from 'react';
 
 export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
+  const [error, setError] = useState('')
 
   const handleLogout = async () => {
     try {
       await authService.logout(); 
       navigate('/login', { replace: true });
     } catch (err) {
+      setError('ошибка выхода')
     }
   };
 

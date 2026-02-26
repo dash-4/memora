@@ -311,3 +311,52 @@ select:focus-visible {
     transform: rotateY(180deg);
   }
 }
+
+@keyframes catSway {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  50%      { transform: rotate(5deg) translateY(-8px); }
+}
+
+@keyframes dragonBreath {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50%      { filter: brightness(1.3) hue-rotate(25deg) drop-shadow(0 0 15px #f87171); }
+}
+
+@keyframes robotPulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.25) drop-shadow(0 0 20px #a5b4fc); }
+}
+
+@keyframes tailWag {
+  0%, 100% { transform: rotate(20deg); }
+  50%      { transform: rotate(-25deg); }
+}
+
+@keyframes wingFlap {
+  0%, 100% { transform: scaleY(1); }
+  50%      { transform: scaleY(1.3) translateY(-10px); }
+}
+
+@keyframes antennaBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+@keyframes wave-fast {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(250%); }
+}
+
+@keyframes shine-fast {
+  0%   { transform: translateX(-180%); }
+  100% { transform: translateX(180%); }
+}
+
+@keyframes sparkle {
+  0%   { opacity: 0; transform: scale(0.3) translateY(0); }
+  40%  { opacity: 1; transform: scale(1.5) translateY(-80px); }
+  100% { opacity: 0; transform: scale(0.6) translateY(-160px); }
+}
+
+.animate-pulse-slow { animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+

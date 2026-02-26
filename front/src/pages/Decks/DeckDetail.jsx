@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Calendar, Dumbbell, Info, Clock, Sparkles, Link2, ClipboardList } from 'lucide-react';
+import { AlertCircle, Calendar, Dumbbell, Info, Clock, Sparkles, Link2, ClipboardList, RefreshCw } from 'lucide-react';
 import api from '@/services/api';
 import Layout from '@/components/layout/Layout';
 import CardModal from '@/components/cards/CardModal';
@@ -18,7 +18,6 @@ export default function DeckDetail() {
   const [deck, setDeck] = useState(null);
   const [cards, setCards] = useState([]);
   const [allCards, setAllCards] = useState([]);
-  const [popularTags, setPopularTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCardModal, setShowCardModal] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
@@ -26,7 +25,6 @@ export default function DeckDetail() {
   const [filters, setFilters] = useState({
     search: '',
     status: '',
-    tag: '',
   });
   const [studyReverse, setStudyReverse] = useState(false);
 
@@ -34,7 +32,6 @@ export default function DeckDetail() {
     try {
       const params = {};
       if (filters.status) params.status = filters.status;
-      if (filters.tag) params.tag = filters.tag;
       const [deckRes, cardsRes] = await Promise.all([
         api.get(`/decks/${id}/`),
         api.get(`/decks/${id}/cards/`, { params }),
@@ -62,21 +59,13 @@ export default function DeckDetail() {
     }
   }, [id, filters]);
 
-  const fetchPopularTags = useCallback(async () => {
-    try {
-      const { data } = await api.get('/cards/popular_tags/');
-      setPopularTags(data);
-    } catch (err) {
-    }
-  }, []);
-
   useEffect(() => {
     fetchDeckDetails();
   }, [fetchDeckDetails]);
 
   useEffect(() => {
-    fetchPopularTags();
-  }, [fetchPopularTags]);
+    // теги и популярные теги больше не используются
+  }, []);
 
   const handleFilterChange = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -153,9 +142,7 @@ export default function DeckDetail() {
   const cardsForLearning = statsCards.length;
   const newCardsCount = statsCards.filter((c) => !c.repetitions || c.repetitions === 0).length;
 
-  const hasDueCards = statsCards.some(
-    (c) => c.repetitions > 0 && (!c.next_review || new Date(c.next_review) <= new Date())
-  );
+
 
   return (
     <Layout>
@@ -164,7 +151,38 @@ export default function DeckDetail() {
 
         <DeckStats total={statsCards.length} dueToday={cardsForLearning} newCount={newCardsCount} />
 
-        {/* Подсказка когда можно начать */}
+        <div className="bg-white border border-gray-200/70 rounded-2xl p-5 sm:p-6 mb-6 sm:mb-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <RefreshCw size={22} className="text-blue-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-base">Реверс (ответ → вопрос)</p>
+               
+              </div>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={studyReverse}
+                onChange={(e) => setStudyReverse(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="
+                w-14 h-7 bg-gray-200 rounded-full peer-focus:outline-none 
+                peer-focus:ring-4 peer-focus:ring-blue-300/50
+                peer peer-checked:after:translate-x-7 peer-checked:after:border-white
+                after:content-[''] after:absolute after:top-0.5 after:left-0.5 
+                after:bg-white after:border after:border-gray-300 after:rounded-full 
+                after:h-6 after:w-6 after:transition-all duration-300
+                peer-checked:bg-blue-600
+              "></div>
+            </label>
+          </div>
+        </div>
+
         {statsCards.length === 0 && (
           <div className="alert-info p-4 sm:p-5 rounded-xl">
             <div className="flex items-start gap-3">
@@ -172,7 +190,7 @@ export default function DeckDetail() {
               <div>
                 <h4 className="text-sm font-semibold mb-1">Как начать обучение?</h4>
                 <p className="text-sm opacity-90">
-                  Добавьте хотя бы одну карточку в колоду, и кнопка "Начать обучение" станет активной. 
+                  Добавьте хотя бы одну карточку в колоду, и кнопка "Начать обучение" станет активной.
                   Рекомендуем начать с 5-10 карточек.
                 </p>
               </div>
@@ -180,309 +198,148 @@ export default function DeckDetail() {
           </div>
         )}
 
-        {statsCards.length > 0 && newCardsCount === 0 && !hasDueCards && (
-          <div className="alert-success p-4 sm:p-5 rounded-xl">
-            <div className="flex items-start gap-3">
-              <Sparkles className="text-green-600 shrink-0 mt-0.5" size={20} />
-              <div>
-                <h4 className="text-sm font-semibold mb-1">
-                  Отличная работа! 🎉
-                </h4>
-                <p className="text-sm opacity-90">
-                  На сегодня карточек нет. Следующее повторение появится по расписанию. 
-                  Можете потренироваться в свободном режиме или добавить новые карточки.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          {[
+            {
+              title: 'Режим обучения',
+              icon: Calendar,
+              color: 'blue',
+              count: cardsForLearning,
+              extraCount: newCardsCount,
+              badgeActive: cardsForLearning > 0 ? 'Влияет на прогресс' : 'Добавьте карточки',
+              badgeColorActive: 'green',
+              desc: 'Повторяйте карточки по расписанию и оценивайте, насколько легко вспомнили. Алгоритм запомнит и покажет сложные карточки чаще.',
+              buttonText: 'Начать обучение',
+              buttonIcon: Sparkles,
+              path: 'learning',
+              condition: cardsForLearning > 0,
+              reverse: true,
+            },
+            {
+              title: 'Режим тренировки',
+              icon: Dumbbell,
+              color: 'purple',
+              count: statsCards.length,
+              badgeActive: 'Свободный режим',
+              badgeColorActive: 'purple',
+              desc: 'Просто повторяйте карточки без оценок. Отлично для быстрого просмотра перед экзаменом или когда хотите освежить память.',
+              buttonText: 'Начать тренировку',
+              buttonIcon: Dumbbell,
+              path: 'practice',
+              condition: statsCards.length > 0,
+              reverse: true,
+            },
+            {
+              title: 'Подбор пар',
+              icon: Link2,
+              color: 'amber',
+              count: statsCards.length,
+              badgeActive: 'Игровой режим',
+              badgeColorActive: 'amber',
+              desc: 'Сопоставьте вопросы и ответы. Подходит для запоминания пар (слово — перевод, термин — определение).',
+              buttonText: 'Начать подбор',
+              buttonIcon: Link2,
+              path: 'matching',
+              condition: statsCards.length >= 2,
+              reverse: true,
+            },
+            {
+              title: 'Тест',
+              icon: ClipboardList,
+              color: 'emerald',
+              count: statsCards.length,
+              badgeActive: 'Тест / экзамен',
+              badgeColorActive: 'emerald',
+              desc: 'Выберите правильный ответ из вариантов. Удобно для самопроверки перед экзаменом или зачётом.',
+              buttonText: 'Начать тест',
+              buttonIcon: ClipboardList,
+              path: 'test',
+              condition: statsCards.length > 0,
+              reverse: true,
+            },
+          ].map((mode) => {
+            const active = mode.condition;
+            const color = mode.color;
 
-        {statsCards.length > 0 && (newCardsCount > 0 || hasDueCards) && (
-          <div className="alert-info p-4 sm:p-5 rounded-xl">
-            <div className="flex items-start gap-3">
-              <Clock className="text-blue-600 shrink-0 mt-0.5" size={20} />
-              <div>
-                <h4 className="text-sm font-semibold mb-1">
-                  Готовы к обучению!
-                </h4>
-                <p className="text-sm opacity-90">
-                  {newCardsCount > 0 && (
-                    <span className="font-medium">{newCardsCount} новых карточек</span>
-                  )}
-                  {newCardsCount > 0 && hasDueCards && ' и '}
-                  {hasDueCards && (
-                    <span className="font-medium">карточки на повторение</span>
-                  )}
-                  {' '}готовы к изучению. Нажмите "Начать обучение" ниже.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+            return (
+              <div
+                key={mode.title}
+                className={`
+                  flex flex-col h-full
+                  bg-white rounded-2xl border border-gray-200/80
+                  overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group
+                  ${active ? `hover:border-${color}-300/60` : 'hover:border-gray-300'}
+                `}
+              >
+                <div className="p-6 lg:p-7 flex flex-col flex-1">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className={`
+                      w-14 h-14 rounded-xl flex items-center justify-center transition-transform duration-300
+                      ${active ? `bg-${color}-50 group-hover:bg-${color}-100` : 'bg-gray-50'}
+                      group-hover:scale-105
+                    `}>
+                      <mode.icon size={26} className={active ? `text-${color}-600` : 'text-gray-400'} />
+                    </div>
 
-        {/* Реверс: вопрос ↔ ответ */}
-        {statsCards.length > 0 && (
-          <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={studyReverse}
-                onChange={(e) => setStudyReverse(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Реверс (ответ → вопрос)</span>
-            </label>
-            <span className="text-xs text-gray-500">Тренировать в обе стороны</span>
-          </div>
-        )}
+                    <span className={`
+                      px-4 py-1.5 rounded-full text-xs font-medium tracking-tight
+                      ${active
+                        ? `bg-${mode.badgeColorActive || color}-50 text-${mode.badgeColorActive || color}-700`
+                        : 'bg-gray-100 text-gray-600'
+                      }
+                    `}>
+                      {active ? mode.badgeActive : 'Добавьте карточки'}
+                    </span>
+                  </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-          {/* Режим обучения */}
-          <Card className={`border-2 transition-all duration-200 ${
-            cardsForLearning > 0 
-              ? 'border-blue-400 shadow-lg' 
-              : 'border-gray-200 opacity-75'
-          }`}>
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                cardsForLearning > 0 ? 'bg-blue-500' : 'bg-gray-200'
-              }`}>
-                <Calendar size={24} className={cardsForLearning > 0 ? 'text-white' : 'text-gray-400'} />
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                cardsForLearning > 0 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}>
-                {cardsForLearning > 0 ? 'Влияет на прогресс' : 'Добавьте карточки'}
-              </span>
-            </div>
+                  <h3 className={`
+                    text-xl font-bold mb-3 transition-colors duration-200
+                    ${active ? `group-hover:text-${color}-700` : 'text-gray-900'}
+                  `}>
+                    {mode.title}
+                  </h3>
 
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Режим обучения</h3>
+                  <p className="text-gray-600 text-sm mb-6 leading-relaxed flex-grow">
+                    {mode.desc}
+                  </p>
 
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              Повторяйте карточки по расписанию и оценивайте, насколько легко вспомнили. Алгоритм
-              запомнит и покажет сложные карточки чаще.
-            </p>
+                  
 
-            <div className={`p-3 rounded-lg mb-4 ${
-              cardsForLearning > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="text-gray-600">
-                  <p className="text-sm font-medium">На сегодня:</p>
-                  {newCardsCount > 0 && (
-                    <p className="text-xs text-blue-600 mt-0.5">
-                      {newCardsCount} {newCardsCount === 1 ? 'новая' : newCardsCount < 5 ? 'новых' : 'новых'}
-                    </p>
-                  )}
+                  <div className="mt-auto">
+                    {active ? (
+                      <Button
+                        className={`
+                          w-full py-3.5 rounded-xl font-medium text-base
+                          border-2 transition-all duration-300
+                          border-${color}-500/70 text-${color}-700
+                          hover:bg-${color}-50/70 hover:border-${color}-500 hover:shadow-md
+                        `}
+                        onClick={() => navigate(`/study?deck=${id}&mode=${mode.path}${mode.reverse && studyReverse ? '&reverse=1' : ''}`)}
+                      >
+                        <mode.buttonIcon size={18} className="mr-2.5" />
+                        {mode.buttonText}
+                      </Button>
+                    ) : (
+                      <div className="text-center py-4 bg-gray-50/80 border border-gray-200/70 rounded-xl text-sm text-gray-600">
+                        Добавьте карточки
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className={`text-2xl font-bold ${
-                  cardsForLearning > 0 ? 'text-blue-600' : 'text-gray-400'
-                }`}>
-                  {cardsForLearning}
-                  <span className="text-sm font-normal text-gray-500 ml-1">
-                    {cardsForLearning === 1
-                      ? 'карточка'
-                      : cardsForLearning < 5
-                        ? 'карточки'
-                        : 'карточек'}
-                  </span>
-                </p>
               </div>
-            </div>
-
-            {cardsForLearning > 0 ? (
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 shadow-md hover:shadow-lg transition-all"
-                onClick={() => navigate(`/study?deck=${id}&mode=learning${studyReverse ? '&reverse=1' : ''}`)}
-              >
-                <Sparkles size={18} className="mr-2" />
-                Начать обучение
-              </Button>
-            ) : (
-              <div className="space-y-2">
-                <div className="text-center py-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm font-medium">
-                  Сначала добавьте карточки
-                </div>
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={handleCreateCard}
-                >
-                  Добавить карточку
-                </Button>
-              </div>
-            )}
-          </Card>
-
-          {/* Режим тренировки */}
-          <Card className={`border-2 transition-all duration-200 ${
-            statsCards.length > 0 
-              ? 'border-purple-200 hover:border-purple-400 hover:shadow-lg' 
-              : 'border-gray-200 opacity-75'
-          }`}>
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                statsCards.length > 0 ? 'bg-purple-100' : 'bg-gray-200'
-              }`}>
-                <Dumbbell size={24} className={statsCards.length > 0 ? 'text-purple-600' : 'text-gray-400'} />
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                statsCards.length > 0 
-                  ? 'bg-purple-100 text-purple-700' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}>
-                Свободный режим
-              </span>
-            </div>
-
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Режим тренировки</h3>
-
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              Просто повторяйте карточки без оценок. Отлично для быстрого просмотра перед экзаменом
-              или когда хотите освежить память.
-            </p>
-
-            <div className={`p-3 rounded-lg mb-4 ${
-              statsCards.length > 0 ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'
-            }`}>
-              <div className="flex items-center justify-between">
-                <p className="text-gray-600 text-sm font-medium">Доступно:</p>
-                <p className={`text-2xl font-bold ${
-                  statsCards.length > 0 ? 'text-purple-600' : 'text-gray-400'
-                }`}>
-                  {statsCards.length}
-                  <span className="text-sm font-normal text-gray-500 ml-1">
-                    {statsCards.length === 1
-                      ? 'карточка'
-                      : statsCards.length < 5
-                        ? 'карточки'
-                        : 'карточек'}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            {statsCards.length > 0 ? (
-              <Button
-                variant="secondary"
-                className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-medium py-3"
-                onClick={() => navigate(`/study?deck=${id}&mode=practice${studyReverse ? '&reverse=1' : ''}`)}
-              >
-                <Dumbbell size={18} className="mr-2" />
-                Начать тренировку
-              </Button>
-            ) : (
-              <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">
-                Добавьте карточки
-              </div>
-            )}
-          </Card>
-
-          {/* Режим «Подбор» */}
-          <Card className={`border-2 transition-all duration-200 ${
-            statsCards.length >= 2
-              ? 'border-amber-200 hover:border-amber-400 hover:shadow-lg'
-              : 'border-gray-200 opacity-75'
-          }`}>
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                statsCards.length >= 2 ? 'bg-amber-100' : 'bg-gray-200'
-              }`}>
-                <Link2 size={24} className={statsCards.length >= 2 ? 'text-amber-600' : 'text-gray-400'} />
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                statsCards.length >= 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
-              }`}>
-                Игровой режим
-              </span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Подбор пар</h3>
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              Сопоставьте вопросы и ответы. Подходит для запоминания пар (слово — перевод, термин — определение).
-            </p>
-            <div className={`p-3 rounded-lg mb-4 ${statsCards.length >= 2 ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
-              <div className="flex items-center justify-between">
-                <p className="text-gray-600 text-sm font-medium">Нужно минимум 2 карточки</p>
-                <p className={`text-2xl font-bold ${statsCards.length >= 2 ? 'text-amber-600' : 'text-gray-400'}`}>
-                  {statsCards.length}
-                </p>
-              </div>
-            </div>
-            {statsCards.length >= 2 ? (
-              <Button
-                variant="secondary"
-                className="w-full border-2 border-amber-600 text-amber-700 hover:bg-amber-50 font-medium py-3"
-                onClick={() => navigate(`/study?deck=${id}&mode=matching${studyReverse ? '&reverse=1' : ''}`)}
-              >
-                <Link2 size={18} className="mr-2" />
-                Начать подбор
-              </Button>
-            ) : (
-              <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">
-                Добавьте карточки
-              </div>
-            )}
-          </Card>
-
-          {/* Режим «Тест» */}
-          <Card className={`border-2 transition-all duration-200 ${
-            statsCards.length > 0
-              ? 'border-emerald-200 hover:border-emerald-400 hover:shadow-lg'
-              : 'border-gray-200 opacity-75'
-          }`}>
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                statsCards.length > 0 ? 'bg-emerald-100' : 'bg-gray-200'
-              }`}>
-                <ClipboardList size={24} className={statsCards.length > 0 ? 'text-emerald-600' : 'text-gray-400'} />
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                statsCards.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
-              }`}>
-                Тест / экзамен
-              </span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Тест</h3>
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              Выберите правильный ответ из вариантов. Удобно для самопроверки перед экзаменом или зачётом.
-            </p>
-            <div className={`p-3 rounded-lg mb-4 ${statsCards.length > 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50'}`}>
-              <div className="flex items-center justify-between">
-                <p className="text-gray-600 text-sm font-medium">Доступно:</p>
-                <p className={`text-2xl font-bold ${statsCards.length > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {statsCards.length}
-                </p>
-              </div>
-            </div>
-            {statsCards.length > 0 ? (
-              <Button
-                variant="secondary"
-                className="w-full border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-medium py-3"
-                onClick={() => navigate(`/study?deck=${id}&mode=test${studyReverse ? '&reverse=1' : ''}`)}
-              >
-                <ClipboardList size={18} className="mr-2" />
-                Начать тест
-              </Button>
-            ) : (
-              <div className="text-center py-3 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm">
-                Добавьте карточки
-              </div>
-            )}
-          </Card>
+            );
+          })}
         </div>
 
         <CardsList
           cards={cards}
           statsCards={statsCards}
           filters={filters}
-          popularTags={popularTags}
           onFilterChange={handleFilterChange}
           onCreateCard={handleCreateCard}
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}
-          onResetFilters={() => setFilters({ search: '', status: '', tag: '' })}
+          onResetFilters={() => setFilters({ search: '', status: '' })}
         />
       </div>
 

@@ -325,8 +325,8 @@ export default function Landing() {
             Присоединяйтесь к тысячам пользователей, которые уже улучшили свои результаты
           </p>
           <Link to="/register">
-            <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-semibold shadow-xl hover:shadow-2xl transition-all w-full sm:w-auto">
-              Создать аккаунт бесплатно
+            <Button className=" text-blue-600 hover:bg-blue-400 px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-semibold shadow-xl hover:shadow-2xl transition-all w-full sm:w-auto">
+              Создать аккаунт 
               <ArrowRight size={20} className="ml-2" />
             </Button>
           </Link>
