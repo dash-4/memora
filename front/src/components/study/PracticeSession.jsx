@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import FlashCard from './FlashCard';
@@ -16,8 +16,6 @@ export default function PracticeSession({ deckId }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const startTime = useRef(Date.now());
 
   useEffect(() => {
     const loadCards = async () => {
@@ -58,7 +56,6 @@ export default function PracticeSession({ deckId }) {
       setCurrentIndex(prev => prev + 1);
       setIsFlipped(false);
     } else {
-      // Просто завершаем тренировку без результатов
       toast.success('Тренировка завершена!', {
         icon: '🏁',
         duration: 3000,

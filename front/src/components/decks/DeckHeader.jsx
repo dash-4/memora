@@ -14,6 +14,7 @@ export default function DeckHeader({ deck, onDelete }) {
           >
             <ArrowLeft size={24} />
           </button>
+          <div className="flex-1 flex items-center justify-between w-full">
           <div>
             <h1 className="heading-page">{deck?.name}</h1>
             {deck?.description && (
@@ -29,6 +30,7 @@ export default function DeckHeader({ deck, onDelete }) {
               <Trash2 size={20} />
               <span className="ml-2 sm:hidden">Удалить</span>
             </Button>
+          </div>
           </div>
         </div>
 

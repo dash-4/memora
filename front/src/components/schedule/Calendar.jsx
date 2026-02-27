@@ -9,7 +9,7 @@ export default function Calendar({ data = [], onDayClick }) {
 
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startDay = (firstDay.getDay() || 7) - 1; // пн = 0
+  const startDay = (firstDay.getDay() || 7) - 1;
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -30,7 +30,6 @@ export default function Calendar({ data = [], onDayClick }) {
 
   return (
     <div className="w-full max-w-md mx-auto select-none">
-      {/* Заголовок */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
@@ -53,14 +52,12 @@ export default function Calendar({ data = [], onDayClick }) {
         </button>
       </div>
 
-      {/* Дни недели */}
       <div className="grid grid-cols-7 text-xs font-medium text-neutral-400 mb-2">
         {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(d => (
           <div key={d} className="text-center">{d}</div>
         ))}
       </div>
 
-      {/* Календарь */}
       <div className="grid grid-cols-7 gap-1">
         {days.map((cell, i) => {
           if (!cell) {

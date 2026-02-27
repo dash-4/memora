@@ -18,7 +18,6 @@ import Button from "@/components/ui/Button";
 import Layout from "@/components/layout/Layout";
 import Calendar from "@/components/schedule/Calendar";
 import StudyPet from "@/components/pet/StudyPet";
-import { DashboardSkeleton } from "@/components/ui/Skeleton";
 import toast from "react-hot-toast";
 
 export default function Dashboard() {
@@ -28,8 +27,6 @@ export default function Dashboard() {
   const [scheduleData, setScheduleData] = useState([]);
   const [decksWithDueCards, setDecksWithDueCards] = useState([]);
   const [currentMonth] = useState(new Date());
-  // eslint-disable-next-line no-unused-vars
-  const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -50,11 +47,8 @@ export default function Dashboard() {
       setDecksWithDueCards(
         decksResponse.data.filter((deck) => deck.cards_due_today > 0),
       );
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch (err) {
       toast.error("Не удалось загрузить данные дашборда");
-    } finally {
-      setLoading(false);
     }
   }, [currentMonth]);
 
@@ -78,16 +72,6 @@ export default function Dashboard() {
       })
       .slice(0, 3);
   };
-
-  // if (loading) {
-  //   return (
-  //     <Layout>
-  //       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-  //         <DashboardSkeleton />
-  //       </div>
-  //     </Layout>
-  //   );
-  // }
 
   const statsCards = [
     {

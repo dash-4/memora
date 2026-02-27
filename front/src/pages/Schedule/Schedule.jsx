@@ -72,8 +72,8 @@ export default function Schedule() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
         </div>
       </Layout>
     );
@@ -81,70 +81,84 @@ export default function Schedule() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <Sparkles className="text-blue-600" size={24} />
-          </div>
-          <div>
-            <h1 className="heading-page">
-              Расписание
-            </h1>
-            <p className="text-muted text-sm sm:text-base mt-0.5">
-              Карточки на ближайшие 7 дней
-            </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-10">
+        {/* Заголовок */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Calendar className="text-blue-600" size={20} sm:size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Расписание
+              </h1>
+              <p className="text-sm text-gray-600">
+                Карточки на ближайшие дни
+              </p>
+            </div>
           </div>
         </div>
 
+        {/* Готовы повторить? */}
         {decksWithDueCards.length > 0 && (
-          <Card className="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-blue-50/30">
-            <div className="p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-sm">
-                    <Clock className="text-white" size={20} />
+          <Card className="border-l-4 border-l-blue-500 bg-blue-50/20 rounded-xl">
+            <div className="p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                    <Sparkles className="text-white" size={20} sm:size={24} />
                   </div>
                   <div>
                     <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                       Готовы повторить?
                     </h2>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-bold text-blue-700">{stats?.today || 0}</span> на сегодня
+                    <p className="text-sm sm:text-base text-blue-700 font-medium mt-1">
+                      {stats?.today || 0} карточек на сегодня
                     </p>
                   </div>
                 </div>
+
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                  onClick={() => navigate('/study')}
+                >
+                  <PlayCircle size={16} className="mr-2" />
+                  Начать сейчас
+                </Button>
               </div>
 
-              <div className="grid gap-3">
+              {/* Список колод */}
+              <div className="mt-5 space-y-3">
                 {decksWithDueCards.map(deck => (
                   <div
                     key={deck.id}
-                    className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all group"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-all"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-                        style={{ backgroundColor: deck.color || '#6366f1' }}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: deck.color || '#3b82f6' }}
                       >
                         <BookOpen size={18} className="text-white" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate text-base">
                           {deck.name}
                         </h3>
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          {deck.cards_due_today} {deck.cards_due_today === 1 ? 'карточка' : deck.cards_due_today < 5 ? 'карточки' : 'карточек'}
+                        <p className="text-sm text-gray-600">
+                          {deck.cards_due_today} карточек
                         </p>
                       </div>
                     </div>
 
                     <Button
-                      onClick={() => handleStartStudying(deck.id)}
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white shrink-0 shadow-sm"
+                      variant="ghost"
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-full sm:w-auto"
+                      onClick={() => handleStartStudying(deck.id)}
                     >
-                      <PlayCircle size={16} className="sm:mr-2" />
-                      <span className="hidden sm:inline">Начать</span>
+                      Начать
                     </Button>
                   </div>
                 ))}
@@ -153,16 +167,19 @@ export default function Schedule() {
           </Card>
         )}
 
-        <Card>
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <Calendar className="text-blue-600" size={22} />
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+        {/* План на неделю */}
+        <Card className="rounded-xl border border-gray-200/70">
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Calendar className="text-blue-600" size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
                   План на неделю
                 </h2>
               </div>
-              <span className="text-xs sm:text-sm text-gray-500 font-medium">
+              <span className="text-sm text-gray-600 font-medium">
                 {scheduleData.reduce((sum, day) => sum + day.count, 0)} всего
               </span>
             </div>
@@ -176,68 +193,68 @@ export default function Schedule() {
                   return (
                     <div
                       key={day.date}
-                      className={`rounded-xl border-2 transition-all ${
-                        isToday
-                          ? 'border-blue-400 bg-blue-50/50 shadow-sm'
+                      className={`
+                        rounded-lg border transition-all text-sm
+                        ${isToday
+                          ? 'border-blue-400 bg-blue-50/50'
                           : day.count > 0 
-                            ? 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                            ? 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                             : 'border-gray-100 bg-gray-50/50'
-                      }`}
+                        }
+                      `}
                     >
                       <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm ${
-                              isToday 
+                            <div className={`
+                              w-10 h-10 rounded-lg flex items-center justify-center font-medium
+                              ${isToday 
                                 ? 'bg-blue-500 text-white'
                                 : day.count > 0 
                                   ? 'bg-gray-700 text-white' 
-                                  : 'bg-gray-300 text-gray-600'
-                            }`}>
+                                  : 'bg-gray-200 text-gray-600'
+                              }
+                            `}>
                               {dayDate.getDate()}
                             </div>
                             <div>
-                              <p className={`font-bold text-sm sm:text-base ${
-                                isToday ? 'text-blue-700' : 'text-gray-900'
-                              }`}>
+                              <p className={`font-medium ${isToday ? 'text-blue-700' : 'text-gray-900'}`}>
                                 {getDateLabel(day.date)}
                               </p>
-                              <p className="text-xs text-gray-500 capitalize">
-                                {dayDate.toLocaleDateString('ru-RU', { 
-                                  weekday: 'long',
-                                  day: 'numeric',
-                                  month: 'long'
-                                })}
+                              <p className="text-xs text-gray-500">
+                                {dayDate.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' })}
                               </p>
                             </div>
                           </div>
 
-                          <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${
-                            day.count > 0 
+                          <span className={`
+                            px-3 py-1 rounded-full font-medium
+                            ${day.count > 0 
                               ? 'bg-blue-100 text-blue-700' 
                               : 'bg-gray-100 text-gray-500'
-                          }`}>
+                            }
+                          `}>
                             {day.count}
-                          </div>
+                          </span>
                         </div>
 
                         {day.by_deck?.length > 0 && (
-                          <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                          <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 text-xs">
                             {day.by_deck.map(item => (
                               <div
                                 key={item.deck_id}
-                                className="flex items-center justify-between py-2 px-3 bg-gray-50/80 rounded-lg hover:bg-gray-100 transition-colors"
+                                className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
                               >
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 min-w-0">
                                   <div
-                                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                                    style={{ backgroundColor: item.color || '#6366f1' }}
+                                    className="w-2 h-2 rounded-full shrink-0"
+                                    style={{ backgroundColor: item.color || '#3b82f6' }}
                                   />
-                                  <span className="text-sm text-gray-900 truncate font-medium">
+                                  <span className="text-gray-800 truncate">
                                     {item.deck_name}
                                   </span>
                                 </div>
-                                <span className="text-xs font-bold text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">
+                                <span className="font-medium text-gray-700">
                                   {item.count}
                                 </span>
                               </div>
@@ -249,13 +266,10 @@ export default function Schedule() {
                   );
                 })
               ) : (
-                <div className="text-center py-12 px-4">
-                  <CheckCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500 font-medium">
+                <div className="text-center py-10 px-4">
+                  <CheckCircle className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600 font-medium">
                     Нет запланированных повторений
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Добавьте карточки в колоды
                   </p>
                 </div>
               )}
