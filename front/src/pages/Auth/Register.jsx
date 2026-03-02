@@ -82,7 +82,6 @@ export default function Register() {
         duration: 4000,
       });
 
-      // Редирект на логин
       navigate('/login');
     } catch (error) {
 
@@ -91,7 +90,6 @@ export default function Register() {
       if (errorData && typeof errorData === 'object') {
         setErrors(errorData);
 
-        // Показываем только первую ошибку
         const firstErrorKey = Object.keys(errorData)[0];
         const firstError = errorData[firstErrorKey];
         const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;

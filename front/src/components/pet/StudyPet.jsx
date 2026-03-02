@@ -4,13 +4,12 @@ import { petAPI } from '@/services/api';
 const PET_EMOJI = { cat: '🐱', dragon: '🐲', robot: '🤖' };
 const XP_PER_LEVEL = 100;
 
-export default function StudyPet({ onLevelUp, compact = false }) {
+export default function StudyPet({ compact = false }) {
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isHappy, setIsHappy] = useState(false);
   const [blink, setBlink] = useState(false);
 
-  // Состояния для имени
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
   const [savingName, setSavingName] = useState(false);
@@ -59,7 +58,6 @@ export default function StudyPet({ onLevelUp, compact = false }) {
     };
   }, [pet?.xp, pet?.level]);
 
-  // Фокус на input
   useEffect(() => {
     if (isEditingName && inputRef.current) {
       inputRef.current.focus();
@@ -79,11 +77,9 @@ export default function StudyPet({ onLevelUp, compact = false }) {
     try {
       const response = await petAPI.update({ name: newName });
   
-      // Вариант А: доверяем ответу сервера
       if (response?.data) {
         setPet(response.data);
       } else {
-        // Вариант Б: обновляем вручную (если сервер ничего полезного не вернул)
         setPet(prev => ({ ...prev, name: newName }));
       }
   
@@ -169,7 +165,6 @@ export default function StudyPet({ onLevelUp, compact = false }) {
       <div className={`absolute inset-0 opacity-30 ${levelGlow} animate-pulse-slow pointer-events-none`} />
 
       <div className="relative flex flex-col items-center text-center z-10">
-        {/* Питомец */}
         <div className="relative mb-4 group">
           <div
             className={`
@@ -235,12 +230,10 @@ export default function StudyPet({ onLevelUp, compact = false }) {
               )}
             </div>
 
-            {/* Уровень */}
             <p className="text-xl font-semibold mt-3 opacity-95 flex items-center gap-2 justify-center">
               Уровень <span className="text-yellow-300 animate-pulse">{pet.level ?? '?'}</span>
             </p>
 
-            {/* Прогресс-бар */}
             <div className="w-full max-w-md mt-3 h-7 bg-black/30 rounded-full overflow-hidden relative shadow-inner backdrop-blur-md">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/30 to-pink-500/20 animate-wave-fast pointer-events-none" />
               <div

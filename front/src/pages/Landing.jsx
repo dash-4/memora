@@ -168,20 +168,7 @@ export default function Landing() {
               <ArrowRight size={16} />
             </Link>
 
-            {/* <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto pt-6 sm:pt-8 border-t border-gray-300 px-4">
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mb-2">10x</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Эффективнее</div>
-              </div>
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mb-2">∞</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Колоды</div>
-              </div>
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mb-2">0₽</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Бесплатно</div>
-              </div>
-            </div> */}
+           
           </div>
         </div>
       </section>

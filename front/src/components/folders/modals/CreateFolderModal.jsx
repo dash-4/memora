@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react'; // или другой крестик
+import { X } from 'lucide-react'; 
 import Button from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 import api from '@/services/api';
 
-// const iconOptions = ['📁', '📂', '🗂️', '📚', '📖', '📝', '🎯', '⭐', '🔥', '💼', '🎨', '🔬'];
 
 export default function CreateFolderModal({ parentId, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     color: '#6366f1',
-    icon: '📁',
     parent: parentId,
   });
   const [loading, setLoading] = useState(false);
@@ -80,24 +78,7 @@ export default function CreateFolderModal({ parentId, onClose, onSuccess }) {
             />
           </div>
 
-          {/* <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Иконка</label>
-            <div className="grid grid-cols-6 gap-2">
-              {iconOptions.map(icon => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, icon })}
-                  className={`
-                    text-2xl p-2 rounded-lg border-2 transition-all
-                    ${formData.icon === icon ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}
-                  `}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
-          </div> */}
+         
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Цвет</label>

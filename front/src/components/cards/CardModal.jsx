@@ -50,8 +50,6 @@ const CardModal = ({ deckId, card, onClose, onSuccess }) => {
         error.response?.data?.message ||
         (isEditing ? 'Ошибка обновления карточки' : 'Ошибка создания карточки');
 
-      // Если detail пришёл объектом,
-      // превращаем его в читаемую строку, чтобы не падал React.
       if (errorMessage && typeof errorMessage === 'object') {
         const allMessages = Object.values(errorMessage)
           .flat()

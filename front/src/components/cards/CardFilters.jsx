@@ -9,7 +9,6 @@ export const CardFilters = ({
   const resetFilters = () => {
     onFilterChange('search', '');
     onFilterChange('status', '');
-    onFilterChange('tag', '');
     if (showDeckFilter) {
       onFilterChange('deck_id', '');
     }
@@ -86,9 +85,9 @@ export const CardFilters = ({
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
           >
             <option value="">Все</option>
-            <option value="new">🆕 Новые</option>
-            <option value="learning">📚 Изучаются</option>
-            <option value="mastered">✅ Выучены</option>
+            <option value="new">Новые</option>
+            <option value="learning">Изучаются</option>
+            <option value="mastered">Выучены</option>
           </select>
         </div>
 
@@ -119,9 +118,7 @@ export const CardFilters = ({
 
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-gray-100">
-          <span className="text-xs font-semibold text-gray-500">
-            Активные фильтры:
-          </span>
+          
           
           {filters.search && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-sm font-medium">
@@ -137,7 +134,7 @@ export const CardFilters = ({
           
           {filters.status && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-sm font-medium">
-              Статус: {
+               {
                 filters.status === 'new' ? 'Новые' :
                 filters.status === 'learning' ? 'Изучаются' :
                 'Выучены'

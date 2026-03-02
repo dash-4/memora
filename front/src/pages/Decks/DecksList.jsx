@@ -64,6 +64,8 @@ export default function DecksList() {
       const { data } = await api.get('/folders/tree/');
       setFolders(data);
     } catch (err) {
+      toast.error('Ошибка загрузки папок');
+      console.error(err);
     }
   };
 
@@ -76,6 +78,7 @@ export default function DecksList() {
       setSubfolders([]);
     } catch (err) {
       toast.error('Ошибка загрузки колод');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,6 +93,7 @@ export default function DecksList() {
       setDecks(data.decks || []);
     } catch (err) {
       toast.error('Ошибка загрузки содержимого папки');
+      console.error(err);
     } finally {
       setLoading(false);
     }

@@ -39,8 +39,9 @@ export default function Schedule() {
       setScheduleData(schedule);
       setStats(scheduleResponse.data.stats);
       setDecksWithDueCards(decksResponse.data.filter(deck => deck.cards_due_today > 0));
-    } catch (error) {
+    } catch (err) {
       toast.error('Ошибка загрузки расписания');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -82,7 +83,6 @@ export default function Schedule() {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-10">
-        {/* Заголовок */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -99,7 +99,6 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* Готовы повторить? */}
         {decksWithDueCards.length > 0 && (
           <Card className="border-l-4 border-l-blue-500 bg-blue-50/20 rounded-xl">
             <div className="p-5 sm:p-6">
@@ -128,7 +127,6 @@ export default function Schedule() {
                 </Button>
               </div>
 
-              {/* Список колод */}
               <div className="mt-5 space-y-3">
                 {decksWithDueCards.map(deck => (
                   <div
@@ -167,7 +165,6 @@ export default function Schedule() {
           </Card>
         )}
 
-        {/* План на неделю */}
         <Card className="rounded-xl border border-gray-200/70">
           <div className="p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">

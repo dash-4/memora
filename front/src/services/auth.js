@@ -41,11 +41,13 @@ export const authService = {
         await api.post('/auth/logout/', { refresh: refreshToken });
       }
     } catch (error) {
+      console.error(error);
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       delete api.defaults.headers.common['Authorization'];
+      
     }
   },
 

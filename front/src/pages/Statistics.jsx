@@ -35,8 +35,9 @@ export default function Statistics() {
 
       setStats(statsResponse.data);
       setDecksStats(decksResponse.data);
-    } catch (error) {
+    } catch (err) {
       toast.error("Ошибка загрузки статистики");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -82,7 +83,7 @@ export default function Statistics() {
             <h1 className="heading-page">
               Статистика
             </h1>
-            <p className="text-muted text-sm sm:text-base mt-0.5">
+            <p className="text-sm text-gray-600">
               Ваш прогресс и достижения
             </p>
           </div>

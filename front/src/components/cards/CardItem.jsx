@@ -6,8 +6,8 @@ export default function CardItem({ card, onEdit, onDelete }) {
     card.repetitions < 3  ? 'yellow' : 'green';
 
   const statusText =
-    card.repetitions === 0 ? '🆕 Новая' :
-    card.repetitions < 3  ? '📚 Изучается' : '✅ Выучена';
+    card.repetitions === 0 ? 'Новая' :
+    card.repetitions < 3  ? 'Изучается' : 'Выучена';
 
   return (
     <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all">

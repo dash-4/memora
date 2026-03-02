@@ -49,6 +49,7 @@ export default function Dashboard() {
       );
     } catch (err) {
       toast.error("Не удалось загрузить данные дашборда");
+      console.log(err);
     }
   }, [currentMonth]);
 

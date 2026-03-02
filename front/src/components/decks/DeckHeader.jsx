@@ -1,24 +1,26 @@
-import { ArrowLeft, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Button from '../ui/Button';
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Button from "../ui/Button";
 
 export default function DeckHeader({ deck, onDelete }) {
   const navigate = useNavigate();
 
   return (
     <div className="flex flex-col min-w-full items-start gap-4 justify-between">
-        <div className="flex items-start justify-between w-full space-x-3 sm:space-x-4 ">
-          <button
-            onClick={() => navigate('/decks')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <div className="flex-1 flex items-center justify-between w-full">
+      <div className="flex items-start justify-between w-full space-x-3 sm:space-x-4 ">
+        <button
+          onClick={() => navigate("/decks")}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <div className="flex-1 flex items-center justify-between w-full">
           <div>
             <h1 className="heading-page">{deck?.name}</h1>
             {deck?.description && (
-              <p className="text-muted mt-1 text-sm sm:text-base">{deck.description}</p>
+              <p className="text-muted mt-1 text-sm sm:text-base">
+                {deck.description}
+              </p>
             )}
           </div>
           <div>
@@ -28,12 +30,10 @@ export default function DeckHeader({ deck, onDelete }) {
               className="w-full sm:w-auto"
             >
               <Trash2 size={20} />
-              <span className="ml-2 sm:hidden">Удалить</span>
             </Button>
           </div>
-          </div>
         </div>
-
+      </div>
     </div>
   );
 }

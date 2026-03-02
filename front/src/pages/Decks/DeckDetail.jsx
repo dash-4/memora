@@ -9,7 +9,6 @@ import DeckStats from '@/components/decks/DeckStats';
 import CardsList from './components/CardsList';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
-import Card from '@/components/cards/Card';
 
 export default function DeckDetail() {
   const { id } = useParams();
@@ -54,6 +53,7 @@ export default function DeckDetail() {
       setCards(fetchedCards);
     } catch (err) {
       toast.error('Не удалось загрузить колоду');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,6 @@ export default function DeckDetail() {
   }, [fetchDeckDetails]);
 
   useEffect(() => {
-    // теги и популярные теги больше не используются
   }, []);
 
   const handleFilterChange = useCallback((key, value) => {
@@ -80,6 +79,7 @@ export default function DeckDetail() {
       navigate('/decks');
     } catch (err) {
       toast.error('Не удалось удалить колоду');
+      console.error(err);
     }
   }, [id, navigate]);
 
@@ -93,6 +93,7 @@ export default function DeckDetail() {
       toast.success('Карточка удалена');
     } catch (err) {
       toast.error('Не удалось удалить карточку');
+      console.error(err);
     }
   }, []);
 
