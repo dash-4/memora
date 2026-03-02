@@ -1,23 +1,17 @@
-import { useState, useEffect } from 'react';
-import {
-  Plus,
-  Search as SearchIcon,
-  BookOpen,
-  Menu,
-  X,
-} from 'lucide-react';
-import api from '@/services/api';
-import Layout from '@/components/layout/Layout';
-import Card from '@/components/cards/Card';
-import Button from '@/components/ui/Button';
-import DeckCard from '@/components/decks/DeckCard';
-import FolderSidebar from '@/components/folders/FolderSidebar';
-import FolderCard from '@/components/folders/FolderCard';
-import FolderBreadcrumbs from '@/components/folders/FolderBreadcrumbs';
-import SearchBar from './components/SearchBar';
-import CreateFolderModal from '@/components/folders/modals/CreateFolderModal';
-import CreateDeckModal from '@/components/folders/modals/CreateDeckModal';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { Plus, Search as SearchIcon, BookOpen, Menu, X } from "lucide-react";
+import api from "@/services/api";
+import Layout from "@/components/layout/Layout";
+import Card from "@/components/cards/Card";
+import Button from "@/components/ui/Button";
+import DeckCard from "@/components/decks/DeckCard";
+import FolderSidebar from "@/components/folders/FolderSidebar";
+import FolderCard from "@/components/folders/FolderCard";
+import FolderBreadcrumbs from "@/components/folders/FolderBreadcrumbs";
+import SearchBar from "./components/SearchBar";
+import CreateFolderModal from "@/components/folders/modals/CreateFolderModal";
+import CreateDeckModal from "@/components/folders/modals/CreateDeckModal";
+import toast from "react-hot-toast";
 
 export default function DecksList() {
   const [decks, setDecks] = useState([]);
@@ -28,9 +22,9 @@ export default function DecksList() {
   const [subfolders, setSubfolders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortBy, setSortBy] = useState("recent");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -61,10 +55,10 @@ export default function DecksList() {
 
   const fetchFoldersTree = async () => {
     try {
-      const { data } = await api.get('/folders/tree/');
+      const { data } = await api.get("/folders/tree/");
       setFolders(data);
     } catch (err) {
-      toast.error('Ошибка загрузки папок');
+      toast.error("Ошибка загрузки папок");
       console.error(err);
     }
   };
@@ -72,12 +66,12 @@ export default function DecksList() {
   const fetchAllDecks = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/decks/');
+      const { data } = await api.get("/decks/");
       setDecks(data.results || data);
       setCurrentFolder(null);
       setSubfolders([]);
     } catch (err) {
-      toast.error('Ошибка загрузки колод');
+      toast.error("Ошибка загрузки колод");
       console.error(err);
     } finally {
       setLoading(false);
@@ -92,7 +86,7 @@ export default function DecksList() {
       setSubfolders(data.subfolders || []);
       setDecks(data.decks || []);
     } catch (err) {
-      toast.error('Ошибка загрузки содержимого папки');
+      toast.error("Ошибка загрузки содержимого папки");
       console.error(err);
     } finally {
       setLoading(false);
@@ -107,19 +101,21 @@ export default function DecksList() {
       result = result.filter(
         (d) =>
           d.name.toLowerCase().includes(q) ||
-          (d.description && d.description.toLowerCase().includes(q))
+          (d.description && d.description.toLowerCase().includes(q)),
       );
     }
 
     switch (sortBy) {
-      case 'name':
+      case "name":
         result.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case 'cards':
+      case "cards":
         result.sort((a, b) => (b.total_cards || 0) - (a.total_cards || 0));
         break;
-      case 'due':
-        result.sort((a, b) => (b.cards_due_today || 0) - (a.cards_due_today || 0));
+      case "due":
+        result.sort(
+          (a, b) => (b.cards_due_today || 0) - (a.cards_due_today || 0),
+        );
         break;
       default:
         result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -129,8 +125,8 @@ export default function DecksList() {
   };
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setSortBy('recent');
+    setSearchQuery("");
+    setSortBy("recent");
   };
 
   const handleFolderSelect = (id) => {
@@ -139,7 +135,12 @@ export default function DecksList() {
   };
 
   const handleDeleteFolder = async (id) => {
-    if (!window.confirm('Удалить папку? Все вложенные колоды останутся без папки.')) return;
+    if (
+      !window.confirm(
+        "Удалить папку? Все вложенные колоды останутся без папки.",
+      )
+    )
+      return;
     try {
       await api.delete(`/folders/${id}/`);
       if (selectedFolderId === id) {
@@ -147,7 +148,7 @@ export default function DecksList() {
       }
       fetchFoldersTree();
     } catch {
-      toast.error('Не удалось удалить папку');
+      toast.error("Не удалось удалить папку");
     }
   };
 
@@ -255,14 +256,12 @@ export default function DecksList() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="w-full sm:w-auto">
                 <h1 className="heading-page">
-                  {currentFolder ? currentFolder.name : 'Все колоды'}
+                  {currentFolder ? currentFolder.name : "Все колоды"}
                 </h1>
-                
-               
+                <p className="text-muted mt-1 text-sm sm:text-base"> {currentFolder ? currentFolder.description : ''}</p>
               </div>
 
               <div className="flex gap-2 w-full sm:w-auto">
-                
                 <Button
                   onClick={() => setShowCreateDeckModal(true)}
                   className="flex-1 sm:flex-none"
@@ -303,7 +302,7 @@ export default function DecksList() {
 
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
-                Колоды {showDecks ? `(${filteredDecks.length})` : ''}
+                Колоды {showDecks ? `(${filteredDecks.length})` : ""}
               </h2>
 
               {showDecks ? (
@@ -314,10 +313,13 @@ export default function DecksList() {
                 </div>
               ) : (
                 <Card className="text-center py-10 sm:py-12">
-                  {searchQuery || sortBy !== 'recent' ? (
+                  {searchQuery || sortBy !== "recent" ? (
                     <>
                       <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <SearchIcon size={28} className="text-gray-400 sm:w-8 sm:h-8" />
+                        <SearchIcon
+                          size={28}
+                          className="text-gray-400 sm:w-8 sm:h-8"
+                        />
                       </div>
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                         Колоды не найдены
@@ -325,20 +327,30 @@ export default function DecksList() {
                       <p className="text-sm sm:text-base text-gray-600 mb-6">
                         Попробуйте изменить параметры поиска
                       </p>
-                      <Button variant="secondary" onClick={clearFilters} size="sm">
+                      <Button
+                        variant="secondary"
+                        onClick={clearFilters}
+                        size="sm"
+                      >
                         Сбросить фильтры
                       </Button>
                     </>
                   ) : (
                     <>
-                      <BookOpen size={40} className="mx-auto text-gray-400 mb-4 sm:w-12 sm:h-12" />
+                      <BookOpen
+                        size={40}
+                        className="mx-auto text-gray-400 mb-4 sm:w-12 sm:h-12"
+                      />
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                         Нет колод
                       </h3>
                       <p className="text-sm sm:text-base text-gray-600 mb-6">
                         Создайте свою первую колоду
                       </p>
-                      <Button onClick={() => setShowCreateDeckModal(true)} size="sm">
+                      <Button
+                        onClick={() => setShowCreateDeckModal(true)}
+                        size="sm"
+                      >
                         Создать колоду
                       </Button>
                     </>
