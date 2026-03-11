@@ -9,7 +9,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '.vercel.app,localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -107,9 +107,11 @@ CACHE_STATS_TTL = 120
 AUTH_USER_MODEL = 'accounts.User'
 
 CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', 
-    'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000'
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,https://memora-r0392qk0q-dashas-projects-16d425a3.vercel.app'
 ).split(',')
+
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
